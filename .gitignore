@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment Variables & Secrets
+.env
+*.env
+serviceAccountKey.json
+*.pem
+*.key
+
+# Uploads & Temporary Storage
+uploads/
+tmp/
+*.tmp
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

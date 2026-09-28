@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Chatty AI - Modern intelligent AI assistant">
+    <title>Chatty AI</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- AUTHENTICATION GUARD OVERLAY               -->
+    <!-- Prevents UI flashes while checking state   -->
+    <!-- ========================================== -->
+    <div id="auth-loading-overlay" class="auth-loading-overlay" aria-label="Loading authentication">
+        <div class="auth-loading-content">
+            <div class="auth-loading-spinner"></div>
+            <div class="auth-loading-brand">
+                <img src="assets/logo.png" alt="Chatty AI" class="brand-logo-img">
+                <span>Chatty AI</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MAIN APPLICATION WRAPPER                   -->
+    <!-- ========================================== -->
+    <div id="app" class="app-layout" style="display: none;">
+
+        <!-- ========================================== -->
+        <!-- SIDEBAR (ChatGPT-Style Collapsible Drawer) -->
+        <!-- ========================================== -->
+        <aside id="sidebar" class="sidebar" role="navigation" aria-label="Chat history and navigation">
+            
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="brand">
+                    <img src="assets/logo.png" alt="Chatty AI Logo" class="brand-logo-img">
+                    <span class="brand-title">Chatty AI</span>
+                </div>
+
+                <button id="new-chat-btn" class="btn btn-new-chat" type="button" aria-label="Start a new chat" title="New Chat (Ctrl+N)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>New Chat</span>
+                </button>
+            </div>
+
+            <!-- Search Conversations -->
+            <div class="sidebar-search">
+                <div class="search-box">
+                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input 
+                        type="search" 
+                        id="search-input" 
+                        class="search-input" 
+                        placeholder="Search conversations..." 
+                        aria-label="Search conversation history"
+                    >
+                </div>
+            </div>
+
+            <!-- Conversation History List -->
+            <nav class="sidebar-conversations" aria-label="Past conversations">
+                <div class="conversations-header">
+                    <span>Recent Chats</span>
+                </div>
+                <ul id="conversation-list" class="conversation-list" role="list">
+                    <!-- Loaded dynamically from Cloud Firestore -->
+                </ul>
+                <div id="conversations-empty" class="conversations-empty">
+                    <p>No conversations yet.<br>Start a new chat to begin!</p>
+                </div>
+            </nav>
+
+            <!-- Sidebar Footer: Profile & Settings -->
+            <div class="sidebar-footer">
+                <div class="user-profile-menu-container">
+                    <button id="user-profile-btn" class="btn-user-profile" type="button" aria-haspopup="true" aria-expanded="false">
+                        <div class="user-avatar" id="user-avatar-initials">U</div>
+                        <div class="user-details">
+                            <span class="user-name" id="user-display-name">User</span>
+                            <span class="user-email" id="user-display-email">user@example.com</span>
+                        </div>
+                        <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="profile-dropdown" class="profile-dropdown" role="menu" hidden>
+                        <div class="dropdown-header">
+                            <span class="dropdown-user-name" id="dropdown-user-name">User</span>
+                            <span class="dropdown-user-email" id="dropdown-user-email">user@example.com</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button id="settings-open-btn" class="dropdown-item" type="button" role="menuitem">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span>Settings</span>
+                        </button>
+                        <button id="theme-toggle-btn" class="dropdown-item" type="button" role="menuitem">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"/>
+                                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                            </svg>
+                            <span id="theme-toggle-label">Toggle Theme</span>
+                        </button>
+                        <button id="dropdown-report-btn" class="dropdown-item" type="button" role="menuitem">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span>Report an Issue</span>
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button id="signout-btn" class="dropdown-item dropdown-item-danger" type="button" role="menuitem">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
+
+        <!-- ========================================== -->
+        <!-- MAIN CHAT WORKSPACE                        -->
+        <!-- ========================================== -->
+        <main class="main-workspace" role="main">
+
+            <!-- Workspace Top Bar -->
+            <header class="workspace-header">
+                <div class="header-left">
+                    <button id="sidebar-toggle" class="btn-icon mobile-only" type="button" aria-label="Toggle navigation sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="model-indicator">
+                        <img src="assets/logo.png" alt="Chatty AI" class="header-logo-icon">
+                        <span class="model-name">Chatty AI</span>
+                        <span class="model-badge" id="model-badge">Groq AI</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button id="header-settings-btn" class="btn-icon" type="button" title="Settings" aria-label="Open settings">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
+                    <button id="clear-chat-btn" class="btn-icon" type="button" title="Clear current view" aria-label="Clear chat">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Content Stream -->
+            <div id="chat-container" class="chat-container">
+
+                <!-- Welcome Screen (Rule 26: Personalized Welcome with Official Logo) -->
+                <section id="welcome-screen" class="welcome-screen" aria-label="Welcome">
+                    <div class="welcome-hero">
+                        <div class="welcome-logo-wrapper">
+                            <img src="assets/logo.png" alt="Chatty AI Official Logo" class="welcome-logo-img">
+                        </div>
+                        <h1 class="welcome-title" id="welcome-greeting">Good day</h1>
+                        <p class="welcome-subtitle">How can I help you today?</p>
+                    </div>
+
+                    <!-- Prompt Suggestion Cards -->
+                    <div class="suggestion-grid" role="group" aria-label="Suggested prompts">
+                        <button class="suggestion-card" type="button" data-prompt="Explain how Cloud Firestore and Firebase Authentication work together">
+                            <div class="card-icon">⚡</div>
+                            <div class="card-content">
+                                <div class="card-title">Firebase Architecture</div>
+                                <div class="card-desc">Understand Auth tokens and Firestore rules</div>
+                            </div>
+                        </button>
+
+                        <button class="suggestion-card" type="button" data-prompt="Write a Node.js Express middleware that validates a JWT Bearer token">
+                            <div class="card-icon">💻</div>
+                            <div class="card-content">
+                                <div class="card-title">Write Express Middleware</div>
+                                <div class="card-desc">Validate authentication tokens securely</div>
+                            </div>
+                        </button>
+
+                        <button class="suggestion-card" type="button" data-prompt="Create an image of a futuristic floating neon city">
+                            <div class="card-icon">🎨</div>
+                            <div class="card-content">
+                                <div class="card-title">Generate AI Artwork</div>
+                                <div class="card-desc">Create high-quality visual concepts</div>
+                            </div>
+                        </button>
+
+                        <button class="suggestion-card" type="button" data-prompt="What are the latest developments in artificial intelligence?">
+                            <div class="card-icon">🌐</div>
+                            <div class="card-content">
+                                <div class="card-title">Live Web Search</div>
+                                <div class="card-desc">Explore current news and verified facts</div>
+                            </div>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Messages Log -->
+                <div id="messages-list" class="messages-list" role="log" aria-live="polite" aria-relevant="additions">
+                    <!-- Dynamic user and assistant messages inserted here -->
+                </div>
+
+                <!-- Thinking Indicator -->
+                <div id="thinking-indicator" class="thinking-indicator" role="status" aria-label="Chatty AI is thinking" hidden>
+                    <div class="thinking-avatar">
+                        <img src="assets/logo.png" alt="Chatty AI" class="thinking-logo-img">
+                    </div>
+                    <div class="thinking-bubble">
+                        <span class="thinking-text">Chatty AI is thinking</span>
+                        <div class="thinking-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ========================================== -->
+            <!-- CHAT COMPOSER                              -->
+            <!-- ========================================== -->
+            <footer class="composer-container">
+                <!-- Attached Document Preview Bar -->
+                <div id="attached-doc-bar" class="attached-doc-bar" hidden>
+                    <div class="attached-doc-chip">
+                        <div class="doc-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                        </div>
+                        <div class="doc-details">
+                            <span id="attached-doc-name" class="attached-doc-name">document.pdf</span>
+                            <span id="attached-doc-meta" class="attached-doc-meta">(0 KB)</span>
+                        </div>
+                        <button id="remove-doc-btn" class="btn-remove-doc" type="button" aria-label="Remove attached document" title="Remove attachment">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden Document File Input -->
+                <input type="file" id="doc-file-input" accept=".pdf,.docx,.txt,.csv,.json,.md,.png,.jpg,.jpeg,.webp" style="display: none;" aria-hidden="true">
+
+                <form id="chat-form" class="composer-box" autocomplete="off">
+                    
+                    <!-- Accessory: Attachment -->
+                    <button id="attachment-btn" class="btn-composer-icon" type="button" aria-label="Attach document (PDF, DOCX, TXT, CSV, Images)" title="Attach document">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Textarea Message Input -->
+                    <textarea 
+                        id="message-input" 
+                        class="message-input" 
+                        placeholder="Message Chatty AI..." 
+                        rows="1" 
+                        aria-label="Message Chatty AI"
+                        required
+                    ></textarea>
+
+                    <!-- Accessory: Voice-to-Text (Rule 21) -->
+                    <button id="voice-btn" class="btn-composer-icon" type="button" aria-label="Voice-to-text input" title="Voice typing (Click to speak)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </button>
+
+                    <!-- Send Button -->
+                    <button id="send-btn" class="btn-send" type="submit" aria-label="Send message" disabled>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+
+                </form>
+
+                <div class="composer-disclaimer">
+                    Chatty AI can make mistakes. Verify important information.
+                </div>
+            </footer>
+
+        </main>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SETTINGS MODAL (Rule 28)                   -->
+    <!-- ========================================== -->
+    <div id="settings-modal" class="modal-overlay" hidden>
+        <div class="modal-card modal-card-wide" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="modal-header">
+                <div class="modal-title-box">
+                    <img src="assets/logo.png" alt="Chatty AI" class="modal-header-logo">
+                    <h2 id="settings-title" class="modal-title">Settings & Preferences</h2>
+                </div>
+                <button id="settings-close-btn" class="btn-modal-close" type="button" aria-label="Close settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="settings-modal-layout">
+                <!-- Settings Navigation Sidebar -->
+                <nav class="settings-nav" aria-label="Settings categories">
+                    <button class="settings-nav-item active" type="button" data-tab="appearance">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                        <span>Appearance</span>
+                    </button>
+                    <button class="settings-nav-item" type="button" data-tab="chat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <span>Chat Preferences</span>
+                    </button>
+                    <button class="settings-nav-item" type="button" data-tab="personality">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>
+                        <span>AI Personality</span>
+                    </button>
+                    <button class="settings-nav-item" type="button" data-tab="response">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+                        <span>Response & Detail</span>
+                    </button>
+                    <button class="settings-nav-item" type="button" data-tab="voice">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                        <span>Voice-to-Text</span>
+                    </button>
+                    <button class="settings-nav-item" type="button" data-tab="security">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Privacy & Security</span>
+                    </button>
+                    <button class="settings-nav-item" type="button" data-tab="account">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>Account</span>
+                    </button>
+                    <div class="settings-nav-divider"></div>
+                    <button class="settings-nav-item settings-nav-item-highlight" type="button" data-tab="support" id="nav-item-support">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span>Report an Issue</span>
+                    </button>
+                </nav>
+
+                <!-- Settings Content Panes -->
+                <div class="settings-content-area">
+                    
+                    <!-- Tab 1: Appearance -->
+                    <div id="tab-appearance" class="settings-tab-panel active">
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">Appearance</h3>
+                            <p class="settings-tab-desc">Customize how Chatty AI looks on your screen.</p>
+                        </div>
+                        <div class="settings-row">
+                            <label for="setting-theme" class="settings-label">Interface Theme</label>
+                            <select id="setting-theme" class="settings-select">
+                                <option value="dark">Dark (Neon Navy)</option>
+                                <option value="light">Light</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Chat Preferences -->
+                    <div id="tab-chat" class="settings-tab-panel" hidden>
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">Chat Preferences</h3>
+                            <p class="settings-tab-desc">Configure messaging behavior and input shortcuts.</p>
+                        </div>
+                        <div class="settings-row">
+                            <label for="setting-enter-send" class="settings-label">Press Enter to Send</label>
+                            <input type="checkbox" id="setting-enter-send" class="settings-checkbox" checked>
+                        </div>
+                        <div class="settings-row">
+                            <label for="setting-auto-scroll" class="settings-label">Auto-scroll during response</label>
+                            <input type="checkbox" id="setting-auto-scroll" class="settings-checkbox" checked>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: AI Personality & Style (Rule 22) -->
+                    <div id="tab-personality" class="settings-tab-panel" hidden>
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">AI Communication Style</h3>
+                            <p class="settings-tab-desc">Fine-tune the tone and custom instructions for Chatty AI.</p>
+                        </div>
+                        <div class="settings-row">
+                            <label for="setting-personality" class="settings-label">Personality Tone</label>
+                            <select id="setting-personality" class="settings-select">
+                                <option value="informative">Informative (Clear & Structured)</option>
+                                <option value="casual">Casual (Conversational & Friendly)</option>
+                                <option value="professional">Professional (Polished & Precise)</option>
+                                <option value="playful">Playful (Engaging & Lively)</option>
+                                <option value="creative">Creative (Imaginative & Expressive)</option>
+                                <option value="direct">Direct (Concise & Focused)</option>
+                                <option value="encouraging">Encouraging (Supportive & Uplifting)</option>
+                                <option value="calm">Calm (Thoughtful & Measured)</option>
+                            </select>
+                        </div>
+                        <div class="settings-row-block">
+                            <label for="setting-custom-instructions" class="settings-label">Custom Instructions (Rule 23)</label>
+                            <textarea id="setting-custom-instructions" class="settings-textarea" placeholder="e.g. Always provide concise code examples in TypeScript..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Response Level (Rule 13 & 15) -->
+                    <div id="tab-response" class="settings-tab-panel" hidden>
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">Response & Explanation</h3>
+                            <p class="settings-tab-desc">Control output depth and reasoning visibility.</p>
+                        </div>
+                        <div class="settings-row">
+                            <label for="setting-detail" class="settings-label">Explanation Level</label>
+                            <select id="setting-detail" class="settings-select">
+                                <option value="balanced">Balanced</option>
+                                <option value="concise">Concise</option>
+                                <option value="detailed">Detailed / Step-by-Step</option>
+                            </select>
+                        </div>
+                        <div class="settings-row">
+                            <label for="setting-reasoning" class="settings-label">Reasoning Snapshot (Rule 15)</label>
+                            <input type="checkbox" id="setting-reasoning" class="settings-checkbox">
+                        </div>
+                    </div>
+
+                    <!-- Tab 5: Voice -->
+                    <div id="tab-voice" class="settings-tab-panel" hidden>
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">Voice-to-Text</h3>
+                            <p class="settings-tab-desc">Speech recognition capabilities and privacy details.</p>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Speech Engine</span>
+                            <span class="settings-value">Browser Web Speech API</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Audio Privacy</span>
+                            <span class="settings-value">Speech is converted locally; no raw audio is recorded or stored.</span>
+                        </div>
+                    </div>
+
+                    <!-- Tab 6: Privacy & Security -->
+                    <div id="tab-security" class="settings-tab-panel" hidden>
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">Privacy & Security</h3>
+                            <p class="settings-tab-desc">Enterprise data protection, UID isolation, and rate-limiting status.</p>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">User Isolation</span>
+                            <span class="settings-value">Firestore Per-UID Rules Enforced</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Prompt Injection Guard</span>
+                            <span class="settings-value">Active (Token & directive sanitizer)</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Server Credentials</span>
+                            <span class="settings-value">Strictly server-side (Zero browser leakage)</span>
+                        </div>
+                    </div>
+
+                    <!-- Tab 7: Account -->
+                    <div id="tab-account" class="settings-tab-panel" hidden>
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">Account Information</h3>
+                            <p class="settings-tab-desc">Manage your authenticated session.</p>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Authenticated Email</span>
+                            <span id="settings-user-email" class="settings-value">user@example.com</span>
+                        </div>
+                        <div class="settings-row">
+                            <span class="settings-label">Auth Provider</span>
+                            <span class="settings-value">Firebase Authentication</span>
+                        </div>
+                    </div>
+
+                    <!-- Tab 8: Support / Report an Issue (Rules 33-41, 46-49) -->
+                    <div id="tab-support" class="settings-tab-panel" hidden>
+                        <div class="settings-panel-header">
+                            <h3 class="settings-tab-title">Report an Issue / Ask a Problem</h3>
+                            <p class="settings-tab-desc">Report bugs, UI glitches, document errors, search issues, or performance feedback directly to the Chatty AI engineering team.</p>
+                        </div>
+
+                        <!-- Feedback Alert Box -->
+                        <div id="report-alert" class="report-alert" role="alert" hidden>
+                            <div class="report-alert-icon" id="report-alert-icon"></div>
+                            <div class="report-alert-content">
+                                <div class="report-alert-title" id="report-alert-title"></div>
+                                <div class="report-alert-message" id="report-alert-message"></div>
+                                <div class="report-alert-id-box" id="report-alert-id-box" hidden>
+                                    <span>Report ID: </span><strong id="report-alert-id"></strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dedicated Issue Form -->
+                        <form id="report-form" class="report-form" novalidate>
+                            <div class="form-group">
+                                <label class="form-label" for="report-email">Your Authenticated Email</label>
+                                <div class="input-wrapper input-wrapper-verified">
+                                    <input type="email" id="report-email" class="form-input form-input-readonly" readonly aria-describedby="report-email-hint">
+                                    <span class="input-verified-badge" title="Authenticated Account Email">Verified Account</span>
+                                </div>
+                                <small id="report-email-hint" class="form-hint">Your authenticated Firebase email is attached to prevent impersonation.</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="report-category">Issue Category</label>
+                                <select id="report-category" class="form-select">
+                                    <option value="Bug / Broken Feature">Bug / Broken Feature</option>
+                                    <option value="UI / Display Problem">UI / Display Problem</option>
+                                    <option value="Login / Authentication Issue">Login / Authentication Issue</option>
+                                    <option value="Web Search Problem">Web Search Problem</option>
+                                    <option value="Document Analysis Problem">Document Analysis Problem</option>
+                                    <option value="Image Generation / Search Problem">Image Generation / Search Problem</option>
+                                    <option value="Voice-to-Text Problem">Voice-to-Text Problem</option>
+                                    <option value="Performance / Latency Issue">Performance / Latency Issue</option>
+                                    <option value="Other Question / Feedback">Other Question / Feedback</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="report-subject">Subject</label>
+                                <input type="text" id="report-subject" class="form-input" placeholder="e.g. Document analysis failed on 2-page PDF" maxlength="150" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="report-complaint">Problem Description</label>
+                                <textarea id="report-complaint" class="form-textarea" placeholder="Describe what happened, what you expected, and any error messages..." rows="5" maxlength="5000" required></textarea>
+                            </div>
+
+                            <div class="form-group form-group-checkbox">
+                                <label class="checkbox-label" for="report-include-context">
+                                    <input type="checkbox" id="report-include-context" checked>
+                                    <span>Include non-sensitive technical context (Browser, OS, Chatty AI version, active conversation ID)</span>
+                                </label>
+                            </div>
+
+                            <div class="report-form-actions">
+                                <button type="submit" id="report-submit-btn" class="btn btn-primary">
+                                    <span class="btn-text">Submit Report</span>
+                                    <span class="btn-spinner" hidden></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer" id="modal-footer-save">
+                <button id="settings-save-btn" class="btn btn-primary" type="button">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TEMPLATES                                  -->
+    <!-- ========================================== -->
+
+    <!-- User Message Template -->
+    <template id="user-msg-template">
+        <div class="message-row message-row-user">
+            <div class="message-bubble message-bubble-user">
+                <div class="message-meta">
+                    <span class="sender-name">You</span>
+                    <span class="message-time"></span>
+                </div>
+                <div class="message-body"></div>
+            </div>
+            <div class="message-avatar avatar-user" aria-hidden="true">U</div>
+        </div>
+    </template>
+
+    <!-- Assistant Message Template -->
+    <template id="ai-msg-template">
+        <div class="message-row message-row-ai">
+            <div class="message-avatar avatar-ai" aria-hidden="true">
+                <img src="assets/logo.png" alt="Chatty AI" class="avatar-logo-img">
+            </div>
+            <div class="message-bubble message-bubble-ai">
+                <div class="message-meta">
+                    <span class="sender-name">Chatty AI</span>
+                    <span class="message-time"></span>
+                </div>
+                
+                <!-- Main Formatted Content -->
+                <div class="message-body"></div>
+
+                <!-- Sources Accordion -->
+                <div class="sources-container" hidden>
+                    <button class="sources-toggle-btn" type="button" aria-expanded="false">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <span>Sources (<span class="sources-count">0</span>)</span>
+                    </button>
+                    <div class="sources-list" hidden></div>
+                </div>
+
+                <!-- Action Toolbar -->
+                <div class="message-toolbar" role="toolbar" aria-label="Message options">
+                    <button class="btn-action btn-copy" type="button" aria-label="Copy message" title="Copy">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span class="action-label">Copy</span>
+                    </button>
+
+                    <button class="btn-action btn-regenerate" type="button" aria-label="Regenerate response" title="Regenerate">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6"></path>
+                            <path d="M1 20v-6h6"></path>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        <span class="action-label">Regenerate</span>
+                    </button>
+
+                    <button class="btn-action btn-like" type="button" aria-label="Like response" title="Good response">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                        </svg>
+                    </button>
+
+                    <button class="btn-action btn-dislike" type="button" aria-label="Dislike response" title="Bad response">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Conversation Item Template -->
+    <template id="conv-item-template">
+        <li class="conv-item" role="listitem">
+            <button class="conv-link" type="button">
+                <svg class="conv-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span class="conv-title"></span>
+            </button>
+            <div class="conv-actions">
+                <button class="btn-conv-action btn-conv-rename" type="button" title="Rename" aria-label="Rename conversation">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                </button>
+                <button class="btn-conv-action btn-conv-delete" type="button" title="Delete" aria-label="Delete conversation">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                    </svg>
+                </button>
+            </div>
+        </li>
+    </template>
+
+    <!-- Main Module Script -->
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>
