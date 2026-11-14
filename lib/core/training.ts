@@ -75,6 +75,10 @@ function parseCorpus(value: unknown): TrainingCorpus {
     if (reviewStatus !== "starter" && reviewStatus !== "reviewed") {
       throw new Error("Knowledge entry " + id + " must have reviewStatus starter or reviewed.");
     }
+    const source = typeof record.source === "string" && record.source.trim() ? record.source : undefined;
+    if (reviewStatus === "reviewed" && !source) {
+      throw new Error("Reviewed knowledge entry " + id + " must include a source reference.");
+    }
 
     return {
       id,
@@ -84,7 +88,7 @@ function parseCorpus(value: unknown): TrainingCorpus {
       explanation: requireText(record.explanation, id + ".explanation"),
       ...(typeof record.example === "string" ? { example: record.example } : {}),
       reviewStatus,
-      ...(typeof record.source === "string" ? { source: record.source } : {}),
+      ...(source ? { source } : {}),
     };
   });
 
