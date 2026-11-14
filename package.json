@@ -11,7 +11,8 @@
     "check:corpus": "node scripts/check-corpus.mjs",
     "db:verify": "node --env-file=.env.local scripts/provision-search-index.mjs",
     "knowledge:import": "node --env-file=.env.local scripts/import-knowledge.mjs",
-    "knowledge:benchmark": "node --env-file=.env.local scripts/benchmark-search.mjs"
+    "knowledge:benchmark": "node --env-file=.env.local scripts/benchmark-search.mjs",
+    "db:seed": "node --env-file=.env.local scripts/seed-core-corpus.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
