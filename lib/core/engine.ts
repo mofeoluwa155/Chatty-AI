@@ -1,4 +1,5 @@
 import { findKnowledge, listKnowledgeTopics } from "./knowledge";
+import { dialogueIntentCount, matchDialogue } from "./dialogue";
 import { trySolveMath } from "./math";
 
 export type CoreMode = "general" | "learning" | "coding" | "maths" | "writing";
@@ -41,9 +42,15 @@ export function think(messages: CoreMessage[], mode: CoreMode = "general"): Core
     return { answer: "Send me a question or a mathematical problem to work on.", engine: "Chatty Core", version: "0.1.0", capability: "conversation" };
   }
 
-  if (isGreeting(latest)) {
-    const name = latest.toLowerCase().includes("morning") ? "Good morning!" : "Hello!";
-    return { answer: name + " I'm Chatty AI, running on Chatty Core. I can currently calculate expressions, solve linear equations in x, and explain topics from my built-in knowledge base.", engine: "Chatty Core", version: "0.1.0", capability: "conversation" };
+  const previousUserMessage = previousUserQuestion(messages) ?? undefined;
+  const dialogue = matchDialogue(latest, previousUserMessage);
+  if (dialogue) {
+    return {
+      answer: dialogue.answer,
+      engine: "Chatty Core",
+      version: "0.1.0",
+      capability: "conversation",
+    };
   }
 
   if (/^(who are you|what are you|are you chatty ai|what is chatty ai)$/.test(question)) {
