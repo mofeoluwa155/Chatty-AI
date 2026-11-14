@@ -84,6 +84,7 @@ for (const [index, item] of benchmark.cases.entries()) {
 const scripts = [
   "scripts/search-client.mjs",
   "scripts/provision-search-index.mjs",
+  "scripts/seed-core-corpus.mjs",
   "scripts/import-knowledge.mjs",
   "scripts/benchmark-search.mjs"
 ];
