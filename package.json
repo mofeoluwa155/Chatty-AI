@@ -9,9 +9,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "check:corpus": "node scripts/check-corpus.mjs",
-    "search:provision": "node --env-file=.env.local scripts/provision-search-index.mjs",
-    "search:import": "node --env-file=.env.local scripts/import-knowledge.mjs",
-    "search:benchmark": "node --env-file=.env.local scripts/benchmark-search.mjs"
+    "db:verify": "node --env-file=.env.local scripts/provision-search-index.mjs",
+    "knowledge:import": "node --env-file=.env.local scripts/import-knowledge.mjs",
+    "knowledge:benchmark": "node --env-file=.env.local scripts/benchmark-search.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
