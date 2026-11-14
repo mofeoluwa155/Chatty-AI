@@ -11,10 +11,6 @@ export type CoreReply = {
   capability: "conversation" | "mathematics" | "knowledge" | "help" | "unsupported";
 };
 
-function isGreeting(value: string): boolean {
-  return /^(hi|hello|hey|good morning|good afternoon|good evening|hiya|howdy)[!. ]*$/i.test(value.trim());
-}
-
 function cleanQuestion(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
