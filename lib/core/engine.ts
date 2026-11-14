@@ -1,5 +1,6 @@
 import { findKnowledge, listKnowledgeTopics } from "./knowledge";
-import { dialogueIntentCount, matchDialogue } from "./dialogue";
+import { searchDistributedKnowledge } from "./distributed-knowledge";
+import { matchDialogue } from "./dialogue";
 import { trySolveMath } from "./math";
 
 export type CoreMode = "general" | "learning" | "coding" | "maths" | "writing";
@@ -15,12 +16,14 @@ function cleanQuestion(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function formatKnowledge(entry: { title: string; explanation: string; example?: string }, mode: CoreMode): string {
-  const opening = mode === "learning"
-    ? "Let's learn it step by step.\n\n"
-    : "";
-  return opening + "**" + entry.title + "**\n\n" + entry.explanation
-    + (entry.example ? "\n\n**Example:** " + entry.example : "");
+function formatKnowledge(
+  entry: { title: string; explanation: string; example?: string; source?: string },
+  mode: CoreMode
+): string {
+  const opening = mode === "learning" ? "Let's learn it step by step.\n\n" : "";
+  const example = entry.example ? "\n\n**Example:** " + entry.example : "";
+  const source = entry.source ? "\n\n**Source:** [Open reference](" + entry.source + ")" : "";
+  return opening + "**" + entry.title + "**\n\n" + entry.explanation + example + source;
 }
 
 function previousUserQuestion(messages: CoreMessage[]): string | null {
@@ -30,7 +33,10 @@ function previousUserQuestion(messages: CoreMessage[]): string | null {
   return null;
 }
 
-export function think(messages: CoreMessage[], mode: CoreMode = "general"): CoreReply {
+export async function think(
+  messages: CoreMessage[],
+  mode: CoreMode = "general"
+): Promise<CoreReply> {
   const latest = messages[messages.length - 1]?.content?.trim() ?? "";
   const question = cleanQuestion(latest);
 
@@ -41,17 +47,12 @@ export function think(messages: CoreMessage[], mode: CoreMode = "general"): Core
   const previousUserMessage = previousUserQuestion(messages) ?? undefined;
   const dialogue = matchDialogue(latest, previousUserMessage);
   if (dialogue) {
-    return {
-      answer: dialogue.answer,
-      engine: "Chatty Core",
-      version: "0.1.0",
-      capability: "conversation",
-    };
+    return { answer: dialogue.answer, engine: "Chatty Core", version: "0.1.0", capability: "conversation" };
   }
 
   if (/^(who are you|what are you|are you chatty ai|what is chatty ai)$/.test(question)) {
     return {
-      answer: "I'm Chatty AI, powered by Chatty Core: a reasoning system written in this project's own TypeScript code. I do not send your questions to OpenAI, Gemini or another hosted language model. My current abilities come from programmed mathematics procedures, rules and a small local knowledge base.",
+      answer: "I'm Chatty AI, powered by Chatty Core: a reasoning system written in this project's own TypeScript code. I do not send your questions to OpenAI, Gemini or another hosted language model. My current abilities come from programmed mathematics procedures, rules and searchable knowledge records.",
       engine: "Chatty Core",
       version: "0.1.0",
       capability: "conversation",
@@ -63,13 +64,11 @@ export function think(messages: CoreMessage[], mode: CoreMode = "general"): Core
       answer: [
         "**What Chatty Core can do now**",
         "• Calculate arithmetic expressions using brackets, decimals, powers and square roots.",
-        "• Solve linear equations in x, including equations such as 2x + 3 = 7.",
-        "• Explain a starter set of science, computing and school topics from its local knowledge base.",
-        "• Use the conversation history sent with each request to understand simple follow-ups.",
+        "• Solve linear equations in x.",
+        "• Search its local knowledge base and, when configured, a separately hosted distributed information index.",
+        "• Recognise supported conversational requests and use recent messages for simple follow-ups.",
         "",
-        "**Current limitation:** this is an early, deterministic engine. It does not yet understand or answer every open-ended question, write or debug arbitrary code, or learn new facts automatically.",
-        "",
-        "To expand its knowledge, we need to add and test new reasoning modules and verified information sources.",
+        "**Current limitation:** it is an early, deterministic system. It does not yet understand every question or learn new facts automatically. The remote index must be connected and populated with sourced records before it can search large datasets.",
       ].join("\n"),
       engine: "Chatty Core",
       version: "0.1.0",
@@ -101,7 +100,7 @@ export function think(messages: CoreMessage[], mode: CoreMode = "general"): Core
     };
   }
 
-  const topic = findKnowledge(latest);
+  const topic = await searchDistributedKnowledge(latest) ?? findKnowledge(latest);
   if (topic) {
     return {
       answer: formatKnowledge(topic, mode),
@@ -115,10 +114,13 @@ export function think(messages: CoreMessage[], mode: CoreMode = "general"): Core
   if (followUp) {
     const previous = previousUserQuestion(messages);
     if (previous) {
-      const previousTopic = findKnowledge(previous);
+      const previousTopic = await searchDistributedKnowledge(previous) ?? findKnowledge(previous);
       if (previousTopic) {
         return {
-          answer: "**More on " + previousTopic.title + "**\n\n" + previousTopic.explanation + (previousTopic.example ? "\n\n**Example:** " + previousTopic.example : "") + "\n\nThis is the explanation available in my current local knowledge base.",
+          answer: "**More on " + previousTopic.title + "**\n\n" + previousTopic.explanation
+            + (previousTopic.example ? "\n\n**Example:** " + previousTopic.example : "")
+            + (previousTopic.source ? "\n\n**Source:** [Open reference](" + previousTopic.source + ")" : "")
+            + "\n\nThis is the explanation available in my current knowledge store.",
           engine: "Chatty Core",
           version: "0.1.0",
           capability: "knowledge",
@@ -129,7 +131,8 @@ export function think(messages: CoreMessage[], mode: CoreMode = "general"): Core
 
   if (/(list|show|what topics|which topics).*(know|knowledge|cover|explain)/.test(question)) {
     return {
-      answer: "My local knowledge base currently covers: " + listKnowledgeTopics().join(", ") + ". This list will grow as more tested knowledge modules are added.",
+      answer: "My built-in knowledge base currently covers: " + listKnowledgeTopics().join(", ")
+        + ". A connected distributed search index can provide additional sourced records.",
       engine: "Chatty Core",
       version: "0.1.0",
       capability: "help",
@@ -137,7 +140,7 @@ export function think(messages: CoreMessage[], mode: CoreMode = "general"): Core
   }
 
   return {
-    answer: "I don't have a tested reasoning rule or knowledge entry for that question yet. I won't invent an answer. Chatty Core is currently strongest at arithmetic, linear equations in x, and the topics in its local knowledge base. This question is a useful candidate for a new module.",
+    answer: "I don't have a tested reasoning rule or knowledge entry for that question yet. I won't invent an answer. This question can be added to the development test set and matched to a reliable information source.",
     engine: "Chatty Core",
     version: "0.1.0",
     capability: "unsupported",
