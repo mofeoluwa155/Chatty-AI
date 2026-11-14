@@ -6,7 +6,7 @@
 export function getSupabaseConfig({ write = false } = {}) {
   const endpointValue = process.env.SUPABASE_URL?.trim();
   const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   if (!endpointValue) throw new Error("SUPABASE_URL is required.");
 
