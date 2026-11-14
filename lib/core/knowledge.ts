@@ -8,6 +8,10 @@ export type KnowledgeEntry = {
   explanation: string;
   example?: string;
   reviewStatus?: string;
+  source?: string;
+  domain?: string;
+  tags?: string[];
+  language?: string;
 };
 
 const KNOWLEDGE: KnowledgeEntry[] = CORE_CORPUS.knowledge;
@@ -19,12 +23,11 @@ const STOP_WORDS = new Set([
 ]);
 
 function normalise(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+  return value.normalize("NFKD")
+    .replace(/\p{M}/gu, "")
     .toLowerCase()
-    .replace(/[^a-z0-9\\s]/g, " ")
-    .replace(/\\s+/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -38,8 +41,7 @@ function stem(word: string): string {
 }
 
 function words(value: string): string[] {
-  return normalise(value)
-    .split(" ")
+  return normalise(value).split(" ")
     .filter((word) => word.length > 1 && !STOP_WORDS.has(word))
     .map(stem);
 }
@@ -60,12 +62,11 @@ function addField(entryIndex: number, value: string, weight: number): void {
 }
 
 KNOWLEDGE.forEach((entry, entryIndex) => {
-  const tokens = new Set([
+  entryTokens[entryIndex] = new Set([
     ...words(entry.title),
     ...entry.aliases.flatMap(words),
     ...entry.keywords.flatMap(words)
   ]);
-  entryTokens[entryIndex] = tokens;
   addField(entryIndex, entry.title, 8);
   for (const alias of entry.aliases) addField(entryIndex, alias, 6);
   for (const keyword of entry.keywords) addField(entryIndex, keyword, 3);
@@ -77,6 +78,10 @@ function inverseDocumentFrequency(token: string): number {
   const total = Math.max(KNOWLEDGE.length, 1);
   const frequency = documentFrequency.get(token) ?? 0;
   return Math.log(1 + (total - frequency + 0.5) / (frequency + 0.5));
+}
+
+export function normaliseKnowledgeQuery(value: string): string {
+  return normalise(value);
 }
 
 export function findKnowledge(query: string): KnowledgeEntry | null {
@@ -91,10 +96,7 @@ export function findKnowledge(query: string): KnowledgeEntry | null {
     const idf = inverseDocumentFrequency(token);
     availableQueryWeight += idf;
     for (const posting of postings.get(token) ?? []) {
-      scores.set(
-        posting.entryIndex,
-        (scores.get(posting.entryIndex) ?? 0) + posting.weight * idf
-      );
+      scores.set(posting.entryIndex, (scores.get(posting.entryIndex) ?? 0) + posting.weight * idf);
     }
   }
 
@@ -129,8 +131,6 @@ export function findKnowledge(query: string): KnowledgeEntry | null {
   }
 
   if (bestIndex < 0) return null;
-
-  // Reject weak or ambiguous matches rather than selecting an unrelated topic.
   const confidence = availableQueryWeight > 0
     ? bestScore / (bestScore + availableQueryWeight * 8)
     : 0;
@@ -138,7 +138,6 @@ export function findKnowledge(query: string): KnowledgeEntry | null {
   if (!exactMatch && (confidence < 0.24 || (secondScore > 0 && margin < bestScore * 0.12))) {
     return null;
   }
-
   return KNOWLEDGE[bestIndex];
 }
 
