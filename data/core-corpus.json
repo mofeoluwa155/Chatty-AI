@@ -230,6 +230,508 @@
       ],
       "explanation": "The water cycle describes the continuous movement of water. Water evaporates, water vapour cools and condenses into clouds, and water returns to the surface as precipitation. It can then collect in bodies of water or flow over and through the ground.",
       "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.cpu",
+      "title": "Central processing unit (CPU)",
+      "aliases": [
+        "processor",
+        "central processing unit"
+      ],
+      "keywords": [
+        "cpu",
+        "processor",
+        "fetch",
+        "decode",
+        "execute",
+        "control unit",
+        "alu",
+        "registers"
+      ],
+      "explanation": "The central processing unit (CPU) processes instructions. It uses the fetch–decode–execute cycle: it fetches an instruction from memory, decodes what it means, then executes it. The control unit coordinates activity, while the arithmetic logic unit (ALU) performs calculations and logical operations.",
+      "example": "A CPU can fetch an instruction to add two values, decode the instruction, then use the ALU to carry it out.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.ram",
+      "title": "Random access memory (RAM)",
+      "aliases": [
+        "main memory",
+        "volatile memory"
+      ],
+      "keywords": [
+        "ram",
+        "memory",
+        "temporary",
+        "volatile",
+        "programs",
+        "data"
+      ],
+      "explanation": "RAM is volatile memory that temporarily stores programs and data currently being used by the computer. Its contents are lost when the power is switched off.",
+      "example": "A document being edited may be held in RAM while it is open.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.rom",
+      "title": "Read-only memory (ROM)",
+      "aliases": [
+        "non volatile memory",
+        "firmware memory"
+      ],
+      "keywords": [
+        "rom",
+        "memory",
+        "non volatile",
+        "firmware",
+        "startup",
+        "instructions"
+      ],
+      "explanation": "ROM is non-volatile memory. It stores instructions or firmware that a device needs, such as code used during start-up. Its contents are retained when power is switched off.",
+      "example": "A computer can use firmware stored in ROM during start-up.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.cache",
+      "title": "Cache memory",
+      "aliases": [
+        "cpu cache"
+      ],
+      "keywords": [
+        "cache",
+        "memory",
+        "cpu",
+        "frequently",
+        "accessed",
+        "fast"
+      ],
+      "explanation": "Cache is small, very fast memory close to or inside the CPU. It keeps copies of frequently used data and instructions so the CPU may access them faster than retrieving them from main memory.",
+      "example": "The CPU may find a recently used instruction in cache instead of fetching it from RAM.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.validation",
+      "title": "Data validation",
+      "aliases": [
+        "validation checks"
+      ],
+      "keywords": [
+        "validation",
+        "data",
+        "input",
+        "range",
+        "length",
+        "type",
+        "format",
+        "check"
+      ],
+      "explanation": "Validation checks whether input data follows specified rules. It can check range, length, type, format or presence. Validation does not prove that data is factually correct.",
+      "example": "A mark-entry system may reject a mark outside the permitted range of 0 to 100.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.verification",
+      "title": "Data verification",
+      "aliases": [
+        "verification checks"
+      ],
+      "keywords": [
+        "verification",
+        "data",
+        "checking",
+        "original",
+        "source",
+        "double entry",
+        "visual"
+      ],
+      "explanation": "Verification checks that data has been copied or entered accurately by comparing it with the original source. It helps reduce transcription errors but does not prove that the original data is correct.",
+      "example": "With double-entry verification, a user enters the same email address twice and the system compares the entries.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.testing",
+      "title": "Software testing",
+      "aliases": [
+        "test data",
+        "program testing"
+      ],
+      "keywords": [
+        "testing",
+        "software",
+        "program",
+        "normal",
+        "boundary",
+        "erroneous",
+        "expected",
+        "actual"
+      ],
+      "explanation": "Software testing checks whether a program behaves as expected. Normal test data checks typical valid input, boundary test data checks values at the edges of an allowed range, and erroneous test data checks invalid input.",
+      "example": "For a permitted age range of 1 to 120, boundary tests include 1 and 120; erroneous tests could include 0 and 121.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.primary-key",
+      "title": "Primary key",
+      "aliases": [
+        "database primary key"
+      ],
+      "keywords": [
+        "database",
+        "primary",
+        "key",
+        "unique",
+        "record",
+        "identifier",
+        "table"
+      ],
+      "explanation": "A primary key is a field, or combination of fields, that uniquely identifies each record in a database table. A primary key value must not be duplicated or left empty.",
+      "example": "A pupil table could use a unique pupil ID as its primary key.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.lan-wan",
+      "title": "LAN and WAN",
+      "aliases": [
+        "local area network",
+        "wide area network"
+      ],
+      "keywords": [
+        "lan",
+        "wan",
+        "network",
+        "local",
+        "wide",
+        "geographical",
+        "devices"
+      ],
+      "explanation": "A local area network (LAN) connects devices across a limited area, such as a home, school or office. A wide area network (WAN) connects networks over a much larger geographical area.",
+      "example": "A school computer room may use a LAN; the internet is a large example of a WAN.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.encryption",
+      "title": "Encryption",
+      "aliases": [
+        "data encryption"
+      ],
+      "keywords": [
+        "encryption",
+        "encrypt",
+        "decrypt",
+        "data",
+        "key",
+        "readable",
+        "unreadable",
+        "security"
+      ],
+      "explanation": "Encryption converts readable data (plaintext) into an unreadable form (ciphertext) using an encryption method and key. Decryption converts it back for an authorised recipient with the appropriate key.",
+      "example": "A messaging service can encrypt a message so that someone who intercepts the ciphertext cannot easily read the original message.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.html-css",
+      "title": "HTML and CSS",
+      "aliases": [
+        "web page structure and style"
+      ],
+      "keywords": [
+        "html",
+        "css",
+        "web",
+        "page",
+        "structure",
+        "style",
+        "content",
+        "design"
+      ],
+      "explanation": "HTML describes the structure and content of a web page, such as headings, paragraphs, links and images. CSS controls how that content is presented, including colours, spacing and layout.",
+      "example": "An HTML h1 element creates a main heading; a CSS rule can change that heading's colour.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.atomic-structure",
+      "title": "Atomic structure",
+      "aliases": [
+        "structure of an atom"
+      ],
+      "keywords": [
+        "atom",
+        "proton",
+        "neutron",
+        "electron",
+        "nucleus",
+        "charge"
+      ],
+      "explanation": "An atom has a tiny central nucleus containing protons and usually neutrons. Electrons occupy regions around the nucleus. Protons have a positive charge, electrons have a negative charge and neutrons have no charge.",
+      "example": "A neutral atom has the same number of protons and electrons.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.atomic-number",
+      "title": "Atomic number",
+      "aliases": [
+        "proton number"
+      ],
+      "keywords": [
+        "atomic",
+        "number",
+        "proton",
+        "element",
+        "nucleus"
+      ],
+      "explanation": "The atomic number of an element is the number of protons in the nucleus of each of its atoms. The proton number identifies the element.",
+      "example": "Every carbon atom has 6 protons, so carbon has atomic number 6.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.isotopes",
+      "title": "Isotopes",
+      "aliases": [
+        "isotopes of an element"
+      ],
+      "keywords": [
+        "isotope",
+        "isotopes",
+        "protons",
+        "neutrons",
+        "same",
+        "element",
+        "mass"
+      ],
+      "explanation": "Isotopes are atoms of the same element with the same number of protons but different numbers of neutrons. They have the same atomic number but different mass numbers.",
+      "example": "Carbon-12 and carbon-14 both have 6 protons, but they have different numbers of neutrons.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.covalent",
+      "title": "Covalent bonding",
+      "aliases": [
+        "covalent bond",
+        "shared electrons"
+      ],
+      "keywords": [
+        "covalent",
+        "bond",
+        "sharing",
+        "shared",
+        "electrons",
+        "non metal",
+        "atoms"
+      ],
+      "explanation": "A covalent bond forms when atoms share one or more pairs of electrons. This commonly occurs between non-metal atoms.",
+      "example": "In a hydrogen molecule, two hydrogen atoms share a pair of electrons.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.ionic",
+      "title": "Ionic bonding",
+      "aliases": [
+        "ionic bond"
+      ],
+      "keywords": [
+        "ionic",
+        "bond",
+        "ions",
+        "electron",
+        "transfer",
+        "attraction",
+        "positive",
+        "negative"
+      ],
+      "explanation": "Ionic bonding involves the transfer of electrons from one atom to another, producing positive and negative ions. The ions are held together by electrostatic attraction between opposite charges.",
+      "example": "In sodium chloride, sodium forms a positive ion and chlorine forms a negative ion.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.neutralisation",
+      "title": "Neutralisation",
+      "aliases": [
+        "acid base reaction"
+      ],
+      "keywords": [
+        "neutralisation",
+        "neutralization",
+        "acid",
+        "alkali",
+        "base",
+        "salt",
+        "water",
+        "reaction"
+      ],
+      "explanation": "Neutralisation happens when an acid reacts with a base or alkali. An acid reacting with an alkali produces a salt and water.",
+      "example": "Hydrochloric acid + sodium hydroxide → sodium chloride + water.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.energy-changes",
+      "title": "Exothermic and endothermic reactions",
+      "aliases": [
+        "energy changes in reactions"
+      ],
+      "keywords": [
+        "exothermic",
+        "endothermic",
+        "energy",
+        "surroundings",
+        "temperature",
+        "transfer",
+        "reaction"
+      ],
+      "explanation": "An exothermic reaction transfers energy to the surroundings, so the surroundings usually become warmer. An endothermic reaction takes in energy from the surroundings, so the surroundings usually become cooler.",
+      "example": "Combustion is exothermic; some thermal decomposition reactions are endothermic.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.homologous-series",
+      "title": "Homologous series",
+      "aliases": [
+        "homologous series in chemistry"
+      ],
+      "keywords": [
+        "homologous",
+        "series",
+        "general",
+        "formula",
+        "functional",
+        "group",
+        "properties",
+        "carbon"
+      ],
+      "explanation": "A homologous series is a family of organic compounds with the same functional group and general formula. Members have similar chemical properties, and successive members differ by CH₂.",
+      "example": "Alkanes form a homologous series with the general formula CₙH₂ₙ₊₂.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "biology.diffusion",
+      "title": "Diffusion",
+      "aliases": [
+        "diffusion in cells"
+      ],
+      "keywords": [
+        "diffusion",
+        "particles",
+        "concentration",
+        "high",
+        "low",
+        "movement",
+        "net"
+      ],
+      "explanation": "Diffusion is the net movement of particles from a region of higher concentration to a region of lower concentration, down a concentration gradient.",
+      "example": "Oxygen can diffuse from the air sacs in the lungs into the blood.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "biology.osmosis",
+      "title": "Osmosis",
+      "aliases": [
+        "osmosis in cells"
+      ],
+      "keywords": [
+        "osmosis",
+        "water",
+        "selectively",
+        "permeable",
+        "membrane",
+        "concentration"
+      ],
+      "explanation": "Osmosis is the net movement of water molecules through a selectively permeable membrane from a region of higher water concentration to a region of lower water concentration.",
+      "example": "Water can move into a plant cell by osmosis when the surrounding solution is more dilute.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "biology.enzymes",
+      "title": "Enzymes",
+      "aliases": [
+        "enzyme action",
+        "biological catalysts"
+      ],
+      "keywords": [
+        "enzyme",
+        "enzymes",
+        "catalyst",
+        "substrate",
+        "active",
+        "site",
+        "temperature",
+        "ph"
+      ],
+      "explanation": "Enzymes are biological catalysts that speed up reactions without being used up. A substrate binds to an enzyme's active site. High temperatures or unsuitable pH can change the active site's shape and reduce enzyme activity.",
+      "example": "Amylase is an enzyme that breaks down starch.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "biology.respiration",
+      "title": "Aerobic respiration",
+      "aliases": [
+        "cellular respiration"
+      ],
+      "keywords": [
+        "aerobic",
+        "respiration",
+        "glucose",
+        "oxygen",
+        "carbon dioxide",
+        "water",
+        "energy"
+      ],
+      "explanation": "Aerobic respiration releases energy from glucose using oxygen. In words: glucose + oxygen → carbon dioxide + water. The released energy is used for cell activities.",
+      "example": "Muscle cells use energy released by aerobic respiration during activity.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "biology.cell-membrane",
+      "title": "Cell membrane",
+      "aliases": [
+        "plasma membrane"
+      ],
+      "keywords": [
+        "cell",
+        "membrane",
+        "controls",
+        "movement",
+        "substances",
+        "inside",
+        "outside"
+      ],
+      "explanation": "The cell membrane forms the boundary of a cell and controls the movement of substances into and out of the cell. It is selectively permeable.",
+      "example": "Oxygen and other small substances can move across the cell membrane.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "maths.percentage",
+      "title": "Percentage",
+      "aliases": [
+        "percentages",
+        "per cent"
+      ],
+      "keywords": [
+        "percentage",
+        "percent",
+        "per",
+        "hundred",
+        "fraction",
+        "100"
+      ],
+      "explanation": "A percentage is a way of expressing a number as a fraction of 100. The symbol % means 'per hundred'.",
+      "example": "25% means 25 out of 100, which is equal to one quarter.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "maths.fraction",
+      "title": "Fractions",
+      "aliases": [
+        "numerator and denominator"
+      ],
+      "keywords": [
+        "fraction",
+        "numerator",
+        "denominator",
+        "part",
+        "whole",
+        "equal"
+      ],
+      "explanation": "A fraction represents part of a whole or a ratio of quantities. The numerator is the top number and the denominator is the bottom number; the denominator cannot be zero.",
+      "example": "In 3/4, 3 is the numerator and 4 is the denominator.",
+      "reviewStatus": "starter"
     }
   ],
   "dialogue": [
@@ -347,6 +849,94 @@
         "i can learn this"
       ],
       "response": "Keep going one step at a time. Practice, check your mistakes and build on what you understand."
+    },
+    {
+      "id": "dialogue.simplify",
+      "intent": "request_simpler_explanation",
+      "examples": [
+        "explain it more simply",
+        "make that easier to understand",
+        "use simpler words",
+        "can you simplify that"
+      ],
+      "response": "I'll make the explanation simpler and deal with one idea at a time. Which part should I start with?"
+    },
+    {
+      "id": "dialogue.steps",
+      "intent": "step_by_step",
+      "examples": [
+        "show me step by step",
+        "explain one step at a time",
+        "break it down step by step",
+        "go through the steps"
+      ],
+      "response": "I'll break it into small steps and explain what happens at each stage."
+    },
+    {
+      "id": "dialogue.example",
+      "intent": "request_example",
+      "examples": [
+        "give me an example",
+        "show me an example",
+        "can i see an example",
+        "give a worked example"
+      ],
+      "response": "I'll use a clear example and show how it connects to the idea."
+    },
+    {
+      "id": "dialogue.repeat",
+      "intent": "repeat_request",
+      "examples": [
+        "say that again",
+        "repeat that please",
+        "can you repeat the explanation",
+        "i missed that"
+      ],
+      "response": "Of course. I'll restate the explanation more clearly. Tell me which part you want repeated."
+    },
+    {
+      "id": "dialogue.understanding",
+      "intent": "understanding",
+      "examples": [
+        "i understand now",
+        "that makes sense",
+        "i get it now",
+        "i understand that"
+      ],
+      "response": "Good. The next useful step is to try a question yourself so we can check that the idea has stuck."
+    },
+    {
+      "id": "dialogue.continue",
+      "intent": "continue",
+      "examples": [
+        "let's continue",
+        "lets move on",
+        "next topic please",
+        "continue to the next part"
+      ],
+      "response": "Let's continue. Send the next topic or question you want to work on."
+    },
+    {
+      "id": "dialogue.encourage-study",
+      "intent": "study_encouragement",
+      "examples": [
+        "i need motivation to study",
+        "help me stay focused",
+        "i am finding studying difficult",
+        "i keep getting distracted"
+      ],
+      "response": "Choose one small topic, put distractions aside for a short study block, then test yourself. Progress comes from focused practice, not just rereading."
+    },
+    {
+      "id": "dialogue.availability",
+      "intent": "availability",
+      "examples": [
+        "are you there",
+        "are you still there",
+        "can you hear me",
+        "are you ready"
+      ],
+      "response": "I'm here and ready to process your next message. What should we work on?"
     }
   ]
 }
