@@ -11,7 +11,7 @@ test('calculator evaluates a basic expression', function () {
 
 test('symbolic solver finds roots of a quadratic', function () {
     const result = runMathTool('solve_equation', { equation: 'x^2-5*x+6=0', variable: 'x' });
-    assert.equal(result.solutions.length, 2);
+    assert.ok(result.solutions.includes('2') && result.solutions.includes('3'));
 });
 
 test('differentiation returns a symbolic derivative', function () {
