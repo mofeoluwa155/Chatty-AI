@@ -2,71 +2,68 @@ import type { KnowledgeEntry } from "./knowledge";
 
 type SearchConfig = {
   endpoint: string;
-  index: string;
-  authorization: string;
+  publishableKey: string;
 };
 
-type SearchHit = {
-  _score?: number | null;
-  _source?: unknown;
-};
-
-type SearchResponse = {
-  hits?: {
-    hits?: SearchHit[];
-  };
+type SearchRow = {
+  id?: unknown;
+  title?: unknown;
+  aliases?: unknown;
+  keywords?: unknown;
+  explanation?: unknown;
+  example?: unknown;
+  source?: unknown;
+  domain?: unknown;
+  tags?: unknown;
+  language?: unknown;
+  review_status?: unknown;
 };
 
 function getSearchConfig(): SearchConfig | null {
-  const endpointValue = process.env.CHATTY_SEARCH_URL?.trim();
-  const apiKey = process.env.CHATTY_SEARCH_API_KEY?.trim();
-  const username = process.env.CHATTY_SEARCH_USERNAME?.trim();
-  const password = process.env.CHATTY_SEARCH_PASSWORD?.trim();
-  const index = process.env.CHATTY_SEARCH_INDEX?.trim() || "chatty-knowledge-v1";
+  const endpointValue = process.env.SUPABASE_URL?.trim();
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
 
-  if (!endpointValue || (!apiKey && !(username && password))) return null;
+  if (!endpointValue || !publishableKey) return null;
 
-  let endpoint: URL;
   try {
-    endpoint = new URL(endpointValue);
+    const endpoint = new URL(endpointValue);
+    const isLocal = endpoint.hostname === "localhost" || endpoint.hostname === "127.0.0.1";
+    if (endpoint.protocol !== "https:" && !isLocal) return null;
+    if (!isLocal && !endpoint.hostname.endsWith(".supabase.co")) return null;
+
+    return {
+      endpoint: endpoint.toString().replace(/\/+$/, ""),
+      publishableKey
+    };
   } catch {
     return null;
   }
-
-  if (endpoint.protocol !== "https:" && endpoint.hostname !== "localhost") return null;
-  if (!/^[a-z0-9][a-z0-9_-]{0,127}$/.test(index)) return null;
-  endpoint.pathname = endpoint.pathname.replace(/\/+$/, "");
-
-  const authorization = apiKey
-    ? "ApiKey " + apiKey
-    : "Basic " + Buffer.from(username + ":" + password).toString("base64");
-
-  return { endpoint: endpoint.toString().replace(/\/$/, ""), index, authorization };
 }
 
 export function distributedSearchConfigured(): boolean {
   return getSearchConfig() !== null;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 function toKnowledgeEntry(value: unknown): KnowledgeEntry | null {
-  if (!isRecord(value)) return null;
-  const { id, title, aliases, keywords, explanation, example, source, domain, tags, language } = value;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+
+  const row = value as SearchRow;
   if (
-    typeof id !== "string" || !id.trim()
-    || typeof title !== "string" || !title.trim()
-    || typeof explanation !== "string" || !explanation.trim()
-    || !Array.isArray(aliases) || !aliases.every((item) => typeof item === "string")
-    || !Array.isArray(keywords) || !keywords.every((item) => typeof item === "string")
+    typeof row.id !== "string" || !row.id.trim()
+    || typeof row.title !== "string" || !row.title.trim()
+    || typeof row.explanation !== "string" || !row.explanation.trim()
+    || !isStringArray(row.aliases)
+    || !isStringArray(row.keywords)
   ) return null;
 
   let safeSource: string | undefined;
-  if (typeof source === "string") {
+  if (typeof row.source === "string") {
     try {
-      const parsed = new URL(source);
+      const parsed = new URL(row.source);
       if (parsed.protocol === "https:") safeSource = parsed.toString();
     } catch {
       safeSource = undefined;
@@ -74,107 +71,49 @@ function toKnowledgeEntry(value: unknown): KnowledgeEntry | null {
   }
 
   return {
-    id,
-    title,
-    aliases: aliases as string[],
-    keywords: keywords as string[],
-    explanation,
-    ...(typeof example === "string" ? { example } : {}),
-    reviewStatus: value.reviewStatus === "reviewed" ? "reviewed" : "starter",
+    id: row.id,
+    title: row.title,
+    aliases: row.aliases,
+    keywords: row.keywords,
+    explanation: row.explanation,
+    ...(typeof row.example === "string" ? { example: row.example } : {}),
+    ...(typeof row.review_status === "string" ? { reviewStatus: row.review_status } : {}),
     ...(safeSource ? { source: safeSource } : {}),
-    ...(typeof domain === "string" ? { domain } : {}),
-    ...(Array.isArray(tags) && tags.every((item) => typeof item === "string") ? { tags: tags as string[] } : {}),
-    ...(typeof language === "string" ? { language } : {})
+    ...(typeof row.domain === "string" ? { domain: row.domain } : {}),
+    ...(isStringArray(row.tags) ? { tags: row.tags } : {}),
+    ...(typeof row.language === "string" ? { language: row.language } : {})
   };
 }
 
 /**
- * Searches the separately hosted OpenSearch index. The app downloads only a few
- * matching records per question; it never loads the full dataset into a Vercel function.
+ * Searches Chatty's own Supabase PostgreSQL knowledge store.
+ * Only read-only search is performed here; writes use a separate trusted importer.
  */
 export async function searchDistributedKnowledge(query: string): Promise<KnowledgeEntry | null> {
   const config = getSearchConfig();
   const cleanQuery = query.trim();
   if (!config || !cleanQuery || cleanQuery.length > 1_000) return null;
 
-  const url = config.endpoint + "/" + config.index + "/_search";
-  const body = {
-    size: 3,
-    track_total_hits: false,
-    _source: ["id", "title", "aliases", "keywords", "explanation", "example", "source", "domain", "tags", "language", "reviewStatus"],
-    query: {
-      bool: {
-        should: [
-          {
-            multi_match: {
-              query: cleanQuery,
-              fields: ["title^10", "aliases^7", "keywords^4"],
-              type: "cross_fields",
-              operator: "or",
-              minimum_should_match: "60%"
-            }
-          },
-          {
-            match: {
-              content: {
-                query: cleanQuery,
-                operator: "or",
-                minimum_should_match: "60%",
-                fuzziness: "AUTO",
-                boost: 1.2
-              }
-            }
-          },
-          {
-            multi_match: {
-              query: cleanQuery,
-              fields: ["title^12", "aliases^9"],
-              type: "phrase",
-              boost: 5
-            }
-          }
-        ],
-        minimum_should_match: 1
-      }
-    }
-  };
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch(config.endpoint + "/rest/v1/rpc/search_knowledge", {
       method: "POST",
       headers: {
-        "Authorization": config.authorization,
+        "apikey": config.publishableKey,
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ query_text: cleanQuery, result_limit: 3 }),
       cache: "no-store",
       signal: AbortSignal.timeout(2_500)
     });
+
     if (!response.ok) return null;
+    const result = await response.json() as unknown;
+    if (!Array.isArray(result) || result.length === 0) return null;
 
-    const result = await response.json() as SearchResponse;
-    const hits = Array.isArray(result.hits?.hits) ? result.hits.hits : [];
-    if (!hits.length) return null;
-
-    const first = hits[0];
-    const second = hits[1];
-    const firstScore = typeof first._score === "number" ? first._score : 0;
-    const secondScore = second && typeof second._score === "number" ? second._score : 0;
-    const entry = toKnowledgeEntry(first._source);
-    if (!entry || firstScore <= 0) return null;
-
-    const normalisedQuery = cleanQuery.toLowerCase();
-    const exactTitleOrAlias = [entry.title, ...entry.aliases].some((value) => {
-      const candidate = value.toLowerCase().trim();
-      return candidate.length > 2 && normalisedQuery.includes(candidate);
-    });
-    if (!exactTitleOrAlias && secondScore > 0 && firstScore - secondScore < firstScore * 0.04) {
-      return null;
-    }
-    return entry;
+    return toKnowledgeEntry(result[0]);
   } catch {
-    // The built-in knowledge base remains available if the remote cluster is offline.
+    // The built-in corpus remains available if Supabase is temporarily unavailable.
     return null;
   }
 }
