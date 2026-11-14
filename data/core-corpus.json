@@ -1,0 +1,352 @@
+{
+  "version": "0.1.0",
+  "status": "starter",
+  "knowledge": [
+    {
+      "id": "computing.binary",
+      "title": "Binary",
+      "aliases": [
+        "binary number system",
+        "base two"
+      ],
+      "keywords": [
+        "binary",
+        "base",
+        "two",
+        "digits",
+        "zero",
+        "one",
+        "computer"
+      ],
+      "explanation": "Binary is a number system that uses only two digits: 0 and 1. Computers represent data using binary because electronic circuits can work with two states, commonly described as off and on.",
+      "example": "The binary number 101 represents 5 in denary: 4 + 0 + 1 = 5.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.bit-byte",
+      "title": "Bit and byte",
+      "aliases": [
+        "bits",
+        "bytes",
+        "data units"
+      ],
+      "keywords": [
+        "bit",
+        "byte",
+        "eight",
+        "data",
+        "storage"
+      ],
+      "explanation": "A bit is one binary digit: either 0 or 1. A byte is a group of 8 bits. A byte can represent 256 different bit patterns because 2⁸ = 256.",
+      "example": "One byte: 01000001.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.algorithm",
+      "title": "Algorithm",
+      "aliases": [
+        "algorithms"
+      ],
+      "keywords": [
+        "algorithm",
+        "steps",
+        "problem",
+        "solution",
+        "sequence"
+      ],
+      "explanation": "An algorithm is a finite sequence of clear steps used to solve a problem or complete a task. A good algorithm has a defined start and finish and produces the intended result.",
+      "example": "To find the largest of two numbers: input both numbers, compare them, then output the larger number.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.variable",
+      "title": "Variable",
+      "aliases": [
+        "variables"
+      ],
+      "keywords": [
+        "variable",
+        "programming",
+        "value",
+        "memory",
+        "change"
+      ],
+      "explanation": "A variable is a named location used by a program to store a value. The value can change while the program runs.",
+      "example": "score = 10 stores the value 10 in a variable named score.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.array",
+      "title": "Array",
+      "aliases": [
+        "one dimensional array",
+        "1d array",
+        "arrays"
+      ],
+      "keywords": [
+        "array",
+        "elements",
+        "index",
+        "collection",
+        "same",
+        "type"
+      ],
+      "explanation": "An array is a data structure that stores several values under one name. Each value is an element, and its position is identified by an index. In many languages, array indexing begins at 0.",
+      "example": "marks = [72, 81, 65] stores three marks in one array.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.selection",
+      "title": "Selection",
+      "aliases": [
+        "if statement",
+        "if else"
+      ],
+      "keywords": [
+        "selection",
+        "condition",
+        "if",
+        "else",
+        "decision",
+        "programming"
+      ],
+      "explanation": "Selection is a programming construct that chooses which instruction or block of instructions to run based on a condition. Common forms include IF, IF-ELSE and nested IF statements.",
+      "example": "IF temperature > 20 THEN output 'Warm' ELSE output 'Cool'.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "computing.iteration",
+      "title": "Iteration",
+      "aliases": [
+        "loops",
+        "repetition",
+        "while loop",
+        "for loop"
+      ],
+      "keywords": [
+        "iteration",
+        "loop",
+        "repeat",
+        "while",
+        "for",
+        "condition"
+      ],
+      "explanation": "Iteration is a programming construct that repeats a set of instructions. A condition-controlled loop repeats while a condition is true; a count-controlled loop repeats a set number of times.",
+      "example": "A loop can add each number in an array to a running total.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "biology.photosynthesis",
+      "title": "Photosynthesis",
+      "aliases": [
+        "how plants make food"
+      ],
+      "keywords": [
+        "photosynthesis",
+        "plants",
+        "light",
+        "glucose",
+        "carbon",
+        "dioxide",
+        "water",
+        "oxygen"
+      ],
+      "explanation": "Photosynthesis is the process by which green plants use light energy to make glucose from carbon dioxide and water. Chlorophyll in the chloroplasts absorbs the light energy. Oxygen is released.",
+      "example": "Word equation: carbon dioxide + water → glucose + oxygen (using light energy).",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.alkanes",
+      "title": "Alkanes",
+      "aliases": [
+        "alkane",
+        "saturated hydrocarbons"
+      ],
+      "keywords": [
+        "alkane",
+        "alkanes",
+        "hydrocarbon",
+        "saturated",
+        "single",
+        "bond",
+        "carbon"
+      ],
+      "explanation": "Alkanes are saturated hydrocarbons. They contain only carbon and hydrogen atoms, with single covalent bonds between carbon atoms. The general formula for straight-chain alkanes is CₙH₂ₙ₊₂.",
+      "example": "Methane is CH₄ and ethane is C₂H₆.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.alkenes",
+      "title": "Alkenes",
+      "aliases": [
+        "alkene",
+        "unsaturated hydrocarbons"
+      ],
+      "keywords": [
+        "alkene",
+        "alkenes",
+        "hydrocarbon",
+        "unsaturated",
+        "double",
+        "bond",
+        "carbon"
+      ],
+      "explanation": "Alkenes are unsaturated hydrocarbons because they contain at least one carbon–carbon double bond. The general formula for a straight-chain alkene with one double bond is CₙH₂ₙ.",
+      "example": "Ethene is C₂H₄. Alkenes decolourise orange bromine water.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "chemistry.boiling-point",
+      "title": "Intermolecular forces and boiling point",
+      "aliases": [
+        "boiling points",
+        "molecular size"
+      ],
+      "keywords": [
+        "intermolecular",
+        "forces",
+        "boiling",
+        "point",
+        "molecules",
+        "size",
+        "energy"
+      ],
+      "explanation": "When molecules are larger, the intermolecular attractions between them are generally stronger. More energy is then needed to separate the molecules, so the boiling point generally increases.",
+      "example": "For a homologous series such as alkanes, boiling point generally increases as the carbon chain gets longer.",
+      "reviewStatus": "starter"
+    },
+    {
+      "id": "science.water-cycle",
+      "title": "The water cycle",
+      "aliases": [
+        "hydrological cycle"
+      ],
+      "keywords": [
+        "water",
+        "cycle",
+        "evaporation",
+        "condensation",
+        "precipitation"
+      ],
+      "explanation": "The water cycle describes the continuous movement of water. Water evaporates, water vapour cools and condenses into clouds, and water returns to the surface as precipitation. It can then collect in bodies of water or flow over and through the ground.",
+      "reviewStatus": "starter"
+    }
+  ],
+  "dialogue": [
+    {
+      "id": "dialogue.wellbeing",
+      "intent": "wellbeing",
+      "examples": [
+        "how are you",
+        "how are you doing",
+        "you alright",
+        "are you okay"
+      ],
+      "response": "I'm running and ready to help. What would you like to work on?"
+    },
+    {
+      "id": "dialogue.identity",
+      "intent": "identity",
+      "examples": [
+        "who are you",
+        "what is your name",
+        "what should i call you",
+        "are you an ai"
+      ],
+      "response": "I'm Chatty AI. My answers are generated by Chatty Core, this project's own programmed reasoning and knowledge system. I don't rely on a hosted language model to answer your messages."
+    },
+    {
+      "id": "dialogue.creator",
+      "intent": "creator",
+      "examples": [
+        "who created you",
+        "who made you",
+        "who built you"
+      ],
+      "response": "Chatty AI is being developed as an independent project. Its reasoning modules, knowledge base and conversation rules are written into this codebase."
+    },
+    {
+      "id": "dialogue.greeting",
+      "intent": "greeting",
+      "examples": [
+        "hi",
+        "hello",
+        "hey",
+        "hiya",
+        "good morning",
+        "good afternoon",
+        "good evening"
+      ],
+      "response": "Hello! What would you like to talk about or solve?"
+    },
+    {
+      "id": "dialogue.gratitude",
+      "intent": "gratitude",
+      "examples": [
+        "thanks",
+        "thank you",
+        "thanks a lot",
+        "cheers",
+        "much appreciated"
+      ],
+      "response": "You're welcome. What would you like to look at next?"
+    },
+    {
+      "id": "dialogue.goodbye",
+      "intent": "goodbye",
+      "examples": [
+        "bye",
+        "goodbye",
+        "see you",
+        "see ya",
+        "talk later"
+      ],
+      "response": "Goodbye. Your conversation is saved in this browser, so you can return to it later."
+    },
+    {
+      "id": "dialogue.apology",
+      "intent": "apology",
+      "examples": [
+        "sorry",
+        "my apologies",
+        "i am sorry"
+      ],
+      "response": "No problem. We can take another approach. Tell me what you would like to change."
+    },
+    {
+      "id": "dialogue.correction",
+      "intent": "correction",
+      "examples": [
+        "you are wrong",
+        "that's wrong",
+        "that is wrong",
+        "incorrect",
+        "not correct"
+      ],
+      "response": "Thanks for pointing that out. Tell me which part you believe is incorrect, and I'll check it against the rules and information available to me."
+    },
+    {
+      "id": "dialogue.confusion",
+      "intent": "confusion",
+      "examples": [
+        "i don't understand",
+        "i do not understand",
+        "i'm confused",
+        "im confused",
+        "that makes no sense"
+      ],
+      "response": "Let's take it one step at a time. Which word or part is confusing?"
+    },
+    {
+      "id": "dialogue.encouragement",
+      "intent": "encouragement",
+      "examples": [
+        "i can do this",
+        "i will do it",
+        "i got this",
+        "i can learn this"
+      ],
+      "response": "Keep going one step at a time. Practice, check your mistakes and build on what you understand."
+    }
+  ]
+}
