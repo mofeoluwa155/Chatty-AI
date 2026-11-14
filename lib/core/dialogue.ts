@@ -1,4 +1,4 @@
-import corpus from "@/data/core-corpus.json";
+import { CORE_CORPUS } from "./training";
 
 export type DialogueResult = {
   answer: string;
@@ -12,7 +12,7 @@ type DialogueRecord = {
   response: string;
 };
 
-const DIALOGUE: DialogueRecord[] = corpus.dialogue as DialogueRecord[];
+const DIALOGUE: DialogueRecord[] = CORE_CORPUS.dialogue;
 
 function normalise(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
