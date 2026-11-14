@@ -1,188 +1,100 @@
-# Chatty AI — Production Assistant
+# Chatty AI — Unified Brain
 
-> **"Chatty AI: Conversational. Clear. Connected."**  
-> *Created by Akintayo Mofeoluwa Richard*
+A general-purpose conversational AI application with a responsive chat interface and a model-orchestration layer for OpenAI and Google Gemini.
 
-Chatty AI is a modular, high-performance, general-purpose AI assistant application built with Node.js, Express, Groq LLMs (`qwen/qwen3.8-27b`), Firebase Authentication, and Cloud Firestore. It includes live web search, image search, provider-based Pollinations image generation (`black-forest-labs/flux.1-schnell`), multi-format document analysis, Web Speech API voice typing, tabbed settings, prompt-injection defense, and an authenticated issue reporting system.
+**Product direction:** conversational, curious, clear, practical, and capable across everyday questions, learning, maths, coding, and writing.
 
----
+## What is included
 
-## Key Features
+- **Two model pathways:** OpenAI GPT-6.1 Terra and Google Gemini 4 Argon, routed through Vercel AI Gateway.
+- **Fusion mode:** runs independent drafts through both models concurrently, then asks the synthesis model to produce one coherent answer. This mode makes up to three model calls per turn and can cost and take more than a single-model response.
+- **Conversation modes:** General, Learning, Coding, Maths, and Writing. Each adjusts the assistant's instructions without changing the selected model.
+- **Streaming responses:** answers appear as they are generated.
+- **Conversation history:** saved in the current browser using localStorage. History is not synced across devices and is not stored in a server database in this version.
+- **Responsive interface:** sidebar, conversation list, model selector, mode selector, prompt suggestions, Markdown, code blocks, and mobile layout.
+- **Basic server safeguards:** input validation, model allow-list, request limits, bounded conversation context, and a lightweight in-memory rate limiter.
 
-1. **Groq AI Core Chat**: Fast text completions powered by Groq (`qwen/qwen3.8-27b`) with double-checking guidelines and adaptive explanations.
-2. **Intelligent Web Search**: Automatic time-sensitivity detection routing queries to Brave Search / SerpAPI with strict prompt-injection defanging and citation grounding.
-3. **Image Search**: Visual photo gallery queries powered by Brave Images, SerpApi Google Images, or Unsplash.
-4. **AI Image Generation**: Modular provider-based image creation powered by Pollinations (`black-forest-labs/flux.1-schnell` model) with Bearer token authentication, timeout controls, and transient retry handling.
-5. **Document Analysis**: Multi-format document parser (PDF, DOCX, TXT, CSV, JSON, MD) with BM25 keyword relevance retrieval and per-user UID isolation.
-6. **Voice-to-Text**: Real-time browser speech recognition via Web Speech API writing to the prompt composer for manual submission.
-7. **Firebase Auth & Cloud Firestore**: Per-user authenticated session persistence, conversation creation, history loading, renaming, and deletion.
-8. **Tabbed Settings**: Modern settings modal with tabs for Appearance, Chat Preferences, AI Personality, Response & Explanation, Voice, Privacy & Security, Account, and Support.
-9. **Report an Issue System**: Authenticated issue reporting form auto-attaching user email to prevent impersonation, generating unique Report IDs (`CHAT-YYYYMMDD-XXXXXX`), and delivering email server-side to `chattyai119@gmail.com`.
-10. **Security & Guardrails**: Sliding-window rate limiting, prompt injection defanging, model-control token stripping, path traversal validation, and zero client-side secret leakage.
-
----
-
-## Architecture & System Flow
+## Architecture
 
 ```
-[User Browser / Mobile]
-       │
-       ▼
-[Express Server (server.js)]
-       │
-       ├── Auth Guard (authMiddleware.js via Firebase Admin JWKS)
-       ├── Rate Limiter (securityService.js)
-       │
-       ├── POST /api/chat ──► [AI Router (aiRouter.js)]
-       │                           ├── Document Analysis (documentService.js)
-       │                           ├── Image Generation (imageGenerationService.js ──► pollinationsProvider.js)
-       │                           ├── Image Search (imageSearchService.js)
-       │                           ├── Web Search (searchService.js)
-       │                           └── Normal LLM Chat (groqService.js)
-       │
-       ├── POST /api/documents/upload ──► [Document Service (documentService.js)]
-       ├── POST /api/support/report   ──► [Support Service (supportService.js)] ──► chattyai119@gmail.com
-       └── GET  /api/health            ──► Health Monitor
+Browser
+  ├─ Responsive Next.js chat interface
+  ├─ Local conversation history (localStorage)
+  └─ POST /api/chat
+         ├─ Validate role, message size, model and mode
+         ├─ Build mode-specific assistant instructions
+         ├─ Single model: stream selected Gateway model
+         └─ Fusion: GPT + Gemini drafts → GPT synthesis stream
+                    │
+                    ▼
+              Vercel AI Gateway
+                    ├─ OpenAI GPT-6.1 Terra
+                    └─ Google Gemini 4 Argon
 ```
 
----
+## Run locally
 
-## Project Structure
+Use Node.js 22 or later.
 
-```
-Chatty AI/
-├── .env                         # Server environment configuration (git-ignored)
-├── .env.example                 # Environment variables reference template
-├── .gitignore                   # Excluded paths (.env, node_modules, temp uploads)
-├── package.json                 # Core dependencies and scripts
-├── package-lock.json
-├── server.js                    # Express application server and endpoint routes
-├── firestore.rules              # Firebase Cloud Firestore security rules
-├── README.md                    # Production documentation
-│
-├── middleware/
-│   └── authMiddleware.js        # Firebase ID Token verification middleware
-│
-├── services/
-│   ├── aiRouter.js              # Central 5-pathway AI dispatcher
-│   ├── groqService.js           # Groq LLM inference service & title generator
-│   ├── firebaseAdmin.js         # Firebase Admin SDK initializer
-│   ├── documentService.js       # Document parser, BM25 chunker, & retrieval
-│   ├── securityService.js       # Rate limiting, injection defense, & file safety
-│   ├── imageSearchService.js    # Visual image search provider
-│   ├── imageGenerationService.js# Generic image generation service facade
-│   ├── imageProviders/
-│   │   └── pollinationsProvider.js # Pollinations image provider adapter
-│   ├── searchService.js         # Web search provider (Brave / SerpAPI)
-│   ├── webSearchService.js      # Alias export for searchService
-│   ├── supportService.js        # Server email submission & report ID generator
-│   ├── emailService.js          # Alias export for supportService
-│   ├── productKnowledge.js      # Structured internal product knowledge definition
-│   └── productKnowledgeService.js# Alias export for productKnowledge
-│
-├── assets/
-│   ├── logo.png                 # Official 3D glowing robot logo (PNG)
-│   └── logo.jpg                 # Official 3D glowing robot logo (JPG)
-│
-├── test/
-│   └── test_suite.js            # Automated Verification & Test Suite
-│
-├── index.html                   # Main chat application HTML UI
-├── signin.html                  # Sign-in page
-├── signup.html                  # Sign-up page
-├── style.css                    # Main application CSS design system
-├── auth.css                     # Authentication pages CSS
-├── script.js                    # Frontend core application controller
-├── auth.js                      # Frontend Firebase Auth manager
-└── firestore-service.js         # Frontend Cloud Firestore CRUD manager
-```
+1. Install dependencies:
 
----
+   ```bash
+   npm install
+   ```
 
-## Environment Configuration (`.env`)
+2. Create `.env.local` from the example:
 
-Copy `.env.example` to `.env` and fill in your keys:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-### Required Keys for Core Features
+3. Add a Vercel AI Gateway API key to `.env.local`:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `PORT` | Server listening port | `3000` |
-| `GROQ_API_KEY` | Groq Console API Key | `gsk_...` |
-| `GROQ_MODEL` | Target Groq model | `qwen/qwen3.8-27b` |
-| `FIREBASE_PROJECT_ID` | Firebase Project ID | `chatty-ai-80838` |
+   ```dotenv
+   AI_GATEWAY_API_KEY=your_key_here
+   ```
 
-### Optional Keys for Advanced Features
+4. Start the development server:
 
-| Variable | Feature Enabled | Provider / Console |
-|----------|-----------------|--------------------|
-| `SEARCH_API_KEY` | Real-time Web Search | [Brave Search API](https://api.search.brave.com/) |
-| `SEARCH_PROVIDER` | Web search provider | `brave` or `serpapi` |
-| `IMAGE_SEARCH_API_KEY` | Real Image Search | Brave Images / SerpApi / Unsplash |
-| `POLLINATIONS_API_KEY` | AI Image Generation | [Pollinations](https://gen.pollinations.ai/) |
-| `IMAGE_GEN_MODEL` | Image generation model | `black-forest-labs/flux.1-schnell` |
-| `SMTP_HOST` | Live Support Email Delivery | `smtp.gmail.com` |
-| `SMTP_PORT` | SMTP Port | `587` |
-| `SMTP_USER` | SMTP Username | `your-email@gmail.com` |
-| `SMTP_PASS` | SMTP App Password | `your-app-password` |
+   ```bash
+   npm run dev
+   ```
 
-> **Note:** When optional keys are omitted, Chatty AI gracefully informs the user without crashing or displaying fake data.
+Open http://localhost:3000.
 
----
+## Deploy to Vercel
 
-## Firebase Setup & Firestore Rules
+1. Import the GitHub repository `mofeoluwa155/Chatty-AI` into Vercel.
+2. Set the project root to the repository root.
+3. Ensure the project's Git production branch is `unified-brain` before promoting it to production. The existing `main` branch is deliberately left unchanged.
+4. Enable Vercel OIDC for the project or add `AI_GATEWAY_API_KEY` as a sensitive environment variable. On Vercel, AI Gateway can authenticate using the automatically supplied `VERCEL_OIDC_TOKEN`; local development uses `AI_GATEWAY_API_KEY`.
+5. Deploy with the Next.js framework preset and Node.js 22.
 
-1. Enable **Email/Password Authentication** in the Firebase Console.
-2. Deploy the strict per-user UID isolation rules in `firestore.rules`:
+The Git branch used for this rebuild is `unified-brain`. The prior `main` branch and its current application are preserved.
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
+## Model and usage notes
 
----
+- Single-model mode makes one model request for each answer.
+- Fusion mode makes two draft requests (one GPT, one Gemini) and a final GPT synthesis request. If one draft provider fails, synthesis can continue with the available draft.
+- Model usage is metered by the configured AI Gateway/provider account. Check the Vercel AI Gateway usage page and provider pricing before sustained use. Fusion may use materially more tokens than single-model mode.
+- This project does not claim to be a foundation model trained from scratch. Its original work is the assistant orchestration, prompting, UI, safeguards, and product experience; the language-model intelligence is provided by the selected underlying models.
+- The assistant does not have live web-search tools in this version and must not present unverified current facts as live research.
 
-## Local Development & Testing
+## Security and limitations
 
-### Installation
+- Never commit `.env.local`, API keys, credentials, or service-account files.
+- The browser stores conversation text locally. Anyone with access to the same browser profile may be able to access that local history.
+- The in-memory rate limiter is a basic per-process guard, not a distributed production rate limiter. A shared store and authenticated accounts should be added before opening the service to heavy public traffic.
+- There is no server-side account system, shared multi-device history, file upload, or web-search connector in this initial release.
+- Review model outputs before relying on them for important decisions.
+
+## Development checks
 
 ```bash
-cd "C:\Users\Akintayo Mofeoluwa\Desktop\Chatty AI"
-npm install
+npm run typecheck
+npm run build
 ```
 
-### Start Local Server
+## Branding
 
-```bash
-npm start
-```
-App runs at: `http://localhost:3000`
-
-### Run Automated Verification Test Suite
-
-```bash
-node test/test_suite.js
-```
-
----
-
-## Production Deployment
-
-1. Set `NODE_ENV=production` on your hosting provider (Render, Railway, Heroku, GCP, AWS).
-2. Set environment variables in your hosting platform dashboard.
-3. Configure start command: `npm start` (which runs `node server.js`).
-4. Ensure CORS and security headers are active (handled automatically by Express middleware in `server.js`).
-
----
-
-## License & Branding
-
-**Chatty AI**  
-*Created by Akintayo Mofeoluwa Richard*  
-Official Slogan: *"Chatty AI: Conversational. Clear. Connected."*
+**Chatty AI — Conversational. Clear. Connected.**
