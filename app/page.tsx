@@ -5,17 +5,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 type Role = "user" | "assistant";
-type Model = "openai" | "gemini" | "fusion";
 type Mode = "general" | "learning" | "coding" | "maths" | "writing";
 type Message = { id: string; role: Role; content: string };
 type Conversation = { id: string; title: string; messages: Message[]; updatedAt: number };
 
 const STORAGE_KEY = "chatty-ai-unified-brain-v2";
-const MODEL_LABELS: Record<Model, string> = {
-  openai: "GPT-6.1 Terra",
-  gemini: "Gemini 4 Argon",
-  fusion: "Fusion · GPT + Gemini",
-};
 const MODE_LABELS: Record<Mode, string> = {
   general: "General",
   learning: "Learning",
@@ -56,7 +50,6 @@ function Icon({ children, size = 18 }: { children: React.ReactNode; size?: numbe
 export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [model, setModel] = useState<Model>("openai");
   const [mode, setMode] = useState<Mode>("general");
   const [draft, setDraft] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -174,7 +167,6 @@ export default function Home() {
         signal: controller.signal,
         body: JSON.stringify({
           messages: requestMessages.map(({ role, content }) => ({ role, content })),
-          model,
           mode,
         }),
       });
@@ -191,23 +183,13 @@ export default function Home() {
         return;
       }
 
-      if (!response.body) {
-        updateAssistantMessage(conversationId, assistantMessage.id, "The response stream was unavailable. Please try again.");
-        return;
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let answer = "";
-
-      while (true) {
-        const result = await reader.read();
-        if (result.done) break;
-        answer += decoder.decode(result.value, { stream: true });
-        updateAssistantMessage(conversationId, assistantMessage.id, answer);
-      }
-      answer += decoder.decode();
-      updateAssistantMessage(conversationId, assistantMessage.id, answer || "I couldn't generate a response. Please try again.");
+      const data = await response.json() as { answer?: string; error?: string };
+      const answer = typeof data.answer === "string" ? data.answer : "";
+      updateAssistantMessage(
+        conversationId,
+        assistantMessage.id,
+        answer || data.error || "Chatty Core returned an empty response. Please try again.",
+      );
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
         updateAssistantMessage(conversationId, assistantMessage.id, "Response stopped.");
@@ -253,7 +235,7 @@ export default function Home() {
           <div className="brand-mark" aria-hidden="true"><span /><span /><span /><span /></div>
           <div className="brand-copy">
             <strong>chatty<span>ai</span></strong>
-            <small>UNIFIED BRAIN</small>
+            <small>CORE BRAIN</small>
           </div>
           <button className="icon-button sidebar-close" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}>
             <Icon><path d="m6 6 12 12M18 6 6 18" /></Icon>
@@ -325,12 +307,7 @@ export default function Home() {
           <div className="topbar-right">
             <label className="model-control">
               <span className="model-orb" />
-              <select aria-label="Choose AI model" value={model} onChange={(event) => setModel(event.target.value as Model)}>
-                <option value="openai">GPT-6.1 Terra</option>
-                <option value="gemini">Gemini 4 Argon</option>
-                <option value="fusion">Fusion · both models</option>
-              </select>
-              <Icon size={14}><path d="m7 10 5 5 5-5" /></Icon>
+              <span>CHATTY CORE · 0.1</span>
             </label>
             <div className="topbar-divider" />
             <button className="new-chat-top" onClick={startNewChat}>
@@ -343,7 +320,7 @@ export default function Home() {
         <div className="conversation-wrap">
           {!hasMessages ? (
             <div className="welcome-screen">
-              <div className="welcome-eyebrow"><span className="eyebrow-line" /> ONE BRAIN. MANY PERSPECTIVES. <span className="eyebrow-line" /></div>
+              <div className="welcome-eyebrow"><span className="eyebrow-line" /> INDEPENDENT REASONING ENGINE <span className="eyebrow-line" /></div>
               <div className="welcome-mark">
                 <div className="welcome-glow" />
                 <div className="welcome-logo"><span /><span /><span /><span /></div>
@@ -376,7 +353,6 @@ export default function Home() {
                   <div className="message-body">
                     <div className="message-meta">
                       <strong>{message.role === "assistant" ? "Chatty AI" : "You"}</strong>
-                      {message.role === "assistant" && index === messages.length - 1 && model === "fusion" && <span className="fusion-label">FUSION</span>}
                     </div>
                     {message.role === "assistant" ? (
                       message.content ? (
@@ -428,7 +404,6 @@ export default function Home() {
                   </select>
                   <Icon size={13}><path d="m7 10 5 5 5-5" /></Icon>
                 </label>
-                {model === "fusion" && <span className="fusion-cost-note">3 model calls · higher usage</span>}
               </div>
               <div className="composer-submit-wrap">
                 <span className="enter-hint">↵ to send</span>
@@ -446,7 +421,7 @@ export default function Home() {
           </form>
           <div className="composer-disclaimer">
             <span>Chatty AI can make mistakes. Verify important information.</span>
-            <span>Powered by Vercel AI Gateway</span>
+            <span>Independent code · no hosted model API</span>
           </div>
         </div>
       </section>
