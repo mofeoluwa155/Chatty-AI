@@ -1,4 +1,5 @@
 import { think, type CoreMessage, type CoreMode } from "@/lib/core/engine";
+import { distributedSearchConfigured } from "@/lib/core/distributed-knowledge";
 import { CORE_CORPUS_STATS } from "@/lib/core/training";
 
 export const runtime = "nodejs";
@@ -13,7 +14,6 @@ type RateEntry = { count: number; resetAt: number };
 const rateWindow = new Map<string, RateEntry>();
 const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 60_000;
-
 const MODES: CoreMode[] = ["general", "learning", "coding", "maths", "writing"];
 
 function clientKey(request: Request): string {
@@ -42,7 +42,6 @@ function errorResponse(message: string, status: number): Response {
 
 function validateMessages(value: unknown): CoreMessage[] | null {
   if (!Array.isArray(value) || value.length === 0 || value.length > 30) return null;
-
   let totalCharacters = 0;
   const result: CoreMessage[] = [];
 
@@ -56,12 +55,10 @@ function validateMessages(value: unknown): CoreMessage[] | null {
     if (!clean || clean.length > 12_000) return null;
     totalCharacters += clean.length;
     if (totalCharacters > 40_000) return null;
-
     result.push({ role, content: clean });
   }
 
-  if (result[result.length - 1]?.role !== "user") return null;
-  return result;
+  return result[result.length - 1]?.role === "user" ? result : null;
 }
 
 export async function GET(): Promise<Response> {
@@ -70,7 +67,16 @@ export async function GET(): Promise<Response> {
     engine: "Chatty Core",
     version: "0.1.0",
     corpus: CORE_CORPUS_STATS,
-    capabilities: ["arithmetic", "square-roots", "powers", "linear-equations", "local-knowledge", "conversation-intents"],
+    distributedKnowledgeSearch: distributedSearchConfigured() ? "configured" : "not_configured",
+    capabilities: [
+      "arithmetic",
+      "square-roots",
+      "powers",
+      "linear-equations",
+      "local-knowledge",
+      "distributed-knowledge-search",
+      "conversation-intents"
+    ],
   }, {
     headers: {
       "Cache-Control": "no-store",
@@ -100,7 +106,7 @@ export async function POST(request: Request): Promise<Response> {
   const mode = MODES.includes(body.mode as CoreMode) ? body.mode as CoreMode : "general";
 
   try {
-    const reply = think(messages, mode);
+    const reply = await think(messages, mode);
     return Response.json(reply, {
       headers: {
         "Cache-Control": "no-store",
