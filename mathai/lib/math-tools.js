@@ -1,7 +1,7 @@
 'use strict';
 
 const { create, all } = require('mathjs');
-const nerdamer = require('nerdamer/all');
+const nerdamer = require('nerdamer');
 const math = create(all, {});
 
 function assertExpression(value, label, allowEquals) {
@@ -36,7 +36,7 @@ function solve(args) {
     const clean = assertExpression(args.equation, 'Equation', true);
     const variable = args.variable || 'x';
     if (!/^[a-zA-Z]$/.test(variable)) throw new Error('Use one letter as the variable, for example x.');
-    const roots = nerdamer.solveEquations(clean, variable);
+    const roots = nerdamer.solve(clean, variable).toString();
     return { equation: clean, variable: variable, solutions: roots, verifiedBy: 'nerdamer' };
 }
 
