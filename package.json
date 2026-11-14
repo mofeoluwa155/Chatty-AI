@@ -1,8 +1,8 @@
 {
-  "name": "chatty-ai-unified-brain",
-  "version": "2.0.0",
+  "name": "chatty-ai-core",
+  "version": "0.1.0",
   "private": true,
-  "description": "A conversational, multi-model AI assistant powered by OpenAI and Gemini through Vercel AI Gateway.",
+  "description": "An independent, deterministic conversational and reasoning engine built in TypeScript.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "ai": "7.0.172",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
