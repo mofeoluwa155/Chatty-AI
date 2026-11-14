@@ -192,11 +192,17 @@ module.exports = async function handler(req, res) {
         check: 'Check the learner working. Identify what is correct, find the first mistake if any, and show how to correct it.'
     }[mode];
 
-    const input = [{
+    const history = Array.isArray(body.history) ? body.history.slice(-10).map(function (item) {
+        const role = item && item.role === 'assistant' ? 'assistant' : 'user';
+        const content = item && typeof item.content === 'string' ? item.content.trim().slice(0, 2000) : '';
+        return { role: role, content: content };
+    }).filter(function (item) { return item.content.length > 0; }) : [];
+
+    const input = history.concat([{
         role: 'user',
         content: 'Learner level: ' + level + '\nRequested teaching mode: ' + modeInstruction + '\n' +
             (working ? ('Learner working:\n' + working + '\n') : '') + 'Maths question:\n' + question
-    }];
+    }]);
 
     try {
         let response = await callModel(input);
