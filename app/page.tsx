@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 
 type Role = "user" | "assistant";
 type Mode = "general" | "learning" | "coding" | "maths" | "writing";
+type EngineStatus = "checking" | "online" | "offline";
 type Message = { id: string; role: Role; content: string };
 type Conversation = { id: string; title: string; messages: Message[]; updatedAt: number };
 
@@ -19,10 +20,10 @@ const MODE_LABELS: Record<Mode, string> = {
 };
 
 const SUGGESTIONS = [
-  { icon: "✦", title: "Explain something difficult", prompt: "Explain a difficult concept in simple language, then give me an example." },
-  { icon: "⌘", title: "Build an app idea", prompt: "Help me turn an app idea into a realistic technical plan and architecture." },
-  { icon: "∑", title: "Solve a maths problem", prompt: "Help me solve a maths problem step by step and check the answer." },
-  { icon: "◈", title: "Explore a new topic", prompt: "Teach me something interesting and useful that I probably do not know yet." },
+  { icon: "∑", title: "Solve a maths problem", prompt: "Calculate 18 × (7 + 3) and show the working." },
+  { icon: "✦", title: "Learn a biology topic", prompt: "Explain photosynthesis in simple terms." },
+  { icon: "⌘", title: "Explore computing", prompt: "What is the difference between RAM and ROM?" },
+  { icon: "◈", title: "Meet Chatty Core", prompt: "Hi Chatty. What can you do?" },
 ];
 
 function createId(): string {
@@ -57,6 +58,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const [engineStatus, setEngineStatus] = useState<EngineStatus>("checking");
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -75,6 +77,21 @@ export default function Home() {
       window.localStorage.removeItem(STORAGE_KEY);
     }
     setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/chat", { method: "GET", cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Core health check failed");
+        const data = await response.json() as { status?: string; engine?: string };
+        if (data.status === "ready" && data.engine === "Chatty Core") setEngineStatus("online");
+        else setEngineStatus("offline");
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof Error && error.name === "AbortError")) setEngineStatus("offline");
+      });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -305,10 +322,11 @@ export default function Home() {
             </div>
           </div>
           <div className="topbar-right">
-            <label className="model-control">
-              <span className="model-orb" />
-              <span>CHATTY CORE · 0.1</span>
-            </label>
+            <div className="model-control" role="status" aria-live="polite">
+              <span className={"model-orb " + engineStatus} />
+              <span>CHATTY CORE</span>
+              <small className="engine-state">{engineStatus === "online" ? "ONLINE" : engineStatus === "offline" ? "OFFLINE" : "CHECKING"}</small>
+            </div>
             <div className="topbar-divider" />
             <button className="new-chat-top" onClick={startNewChat}>
               <Icon size={16}><path d="M12 5v14M5 12h14" /></Icon>
@@ -320,13 +338,13 @@ export default function Home() {
         <div className="conversation-wrap">
           {!hasMessages ? (
             <div className="welcome-screen">
-              <div className="welcome-eyebrow"><span className="eyebrow-line" /> INDEPENDENT REASONING ENGINE <span className="eyebrow-line" /></div>
+              <div className="welcome-eyebrow"><span className="eyebrow-line" /> YOUR INDEPENDENT AI ASSISTANT <span className="eyebrow-line" /></div>
               <div className="welcome-mark">
                 <div className="welcome-glow" />
                 <div className="welcome-logo"><span /><span /><span /><span /></div>
               </div>
-              <h1>Think clearly.<br /><em>Ask anything.</em></h1>
-              <p className="welcome-subtitle">A capable assistant for ideas, learning, building, and everything in between.</p>
+              <h1>What can I help<br /><em>you with today?</em></h1>
+              <p className="welcome-subtitle">Ask a question, work through a problem, or explore a subject. Chatty Core uses its own programmed reasoning and searchable knowledge.</p>
 
               <div className="suggestion-grid">
                 {SUGGESTIONS.map((suggestion) => (
@@ -337,7 +355,7 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <div className="welcome-caption"><span className="status-pulse" /> READY WHEN YOU ARE</div>
+              <div className="welcome-caption"><span className={"status-pulse " + engineStatus} /> {engineStatus === "online" ? "CORE ENGINE ONLINE" : engineStatus === "offline" ? "CORE ENGINE UNAVAILABLE" : "CONNECTING TO CORE ENGINE"}</div>
             </div>
           ) : (
             <div className="message-list">
@@ -348,7 +366,7 @@ export default function Home() {
               {messages.map((message, index) => (
                 <article className={"message-row " + message.role} key={message.id}>
                   <div className={"message-avatar " + message.role}>
-                    {message.role === "assistant" ? <div className="mini-mark"><span /><span /><span /><span /></div> : "Y"}
+                    {message.role === "assistant" ? <div className="mini-mark"><span /><span /><span /><span /></div> : "U"}
                   </div>
                   <div className="message-body">
                     <div className="message-meta">
@@ -421,7 +439,7 @@ export default function Home() {
           </form>
           <div className="composer-disclaimer">
             <span>Chatty AI can make mistakes. Verify important information.</span>
-            <span>Independent code · no hosted model API</span>
+            <span>Independent code · no hosted language model API</span>
           </div>
         </div>
       </section>
