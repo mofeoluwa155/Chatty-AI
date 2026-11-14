@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "mathjs": "^14.8.1",
-    "nerdamer": "^1.1.13"
+    "nerdamer": "^2.0.1"
   }
 }
