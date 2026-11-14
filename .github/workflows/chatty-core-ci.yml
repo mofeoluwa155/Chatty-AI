@@ -1,0 +1,38 @@
+name: Chatty Core CI
+
+on:
+  push:
+    branches:
+      - unified-brain
+  pull_request:
+    branches:
+      - unified-brain
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate knowledge corpus and ingestion tools
+        run: npm run check:corpus
+
+      - name: Type-check application
+        run: npm run typecheck
+
+      - name: Build application
+        run: npm run build
