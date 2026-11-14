@@ -20,6 +20,7 @@ if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 2_000) {
 const checkpointPath = inputPath + ".chatty-checkpoint.json";
 const rejectedPath = inputPath + ".rejected.jsonl";
 const failuresPath = inputPath + ".failed.jsonl";
+const errorsPath = inputPath + ".errors.jsonl";
 
 let lastCompletedLine = 0;
 try {
@@ -31,10 +32,12 @@ try {
   // A missing checkpoint means this is the first import run.
 }
 
-const rejectedStream = createWriteStream(rejectedPath, { flags: lastCompletedLine ? "a" : "w" });
-const failuresStream = createWriteStream(failuresPath, { flags: lastCompletedLine ? "a" : "w" });
+const appendMode = lastCompletedLine > 0 ? "a" : "w";
+const rejectedStream = createWriteStream(rejectedPath, { flags: appendMode });
+const failuresStream = createWriteStream(failuresPath, { flags: appendMode });
+const errorsStream = createWriteStream(errorsPath, { flags: appendMode });
 
-function validateRecord(value, lineNumber) {
+function validateRecord(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Each JSONL line must be an object.");
   }
@@ -103,24 +106,25 @@ function writeLine(stream, line) {
 async function sendBulk(batch) {
   let pending = batch;
   let indexed = 0;
-  let permanentFailures = [];
+  const permanentFailures = [];
 
   for (let attempt = 0; pending.length && attempt < 6; attempt += 1) {
+    const targetIndex = process.env.CHATTY_SEARCH_INDEX || "chatty-knowledge-v1";
     const payload = pending.map((record) =>
-      JSON.stringify({ index: { _index: process.env.CHATTY_SEARCH_INDEX || "chatty-knowledge-v1", _id: record.document.id } })
+      JSON.stringify({ index: { _index: targetIndex, _id: record.document.id } })
       + "\n" + JSON.stringify(record.document) + "\n"
     ).join("");
 
-    let response;
     let result;
     try {
-      const config = await searchRequest("/_bulk", {
+      const response = await searchRequest("/_bulk", {
         method: "POST",
         headers: { "Content-Type": "application/x-ndjson" },
         body: payload
       });
-      response = config;
-      if (!response.ok) throw new Error("HTTP " + response.status + ": " + (await response.text()).slice(0, 1000));
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status + ": " + (await response.text()).slice(0, 1000));
+      }
       result = await response.json();
     } catch (error) {
       if (attempt === 5) {
@@ -158,10 +162,11 @@ async function sendBulk(batch) {
   }
 
   for (const failure of permanentFailures) {
-    await writeLine(failuresStream, JSON.stringify({
+    // Keep failed records as valid JSONL so they can be re-imported after correction.
+    await writeLine(failuresStream, failure.record.raw);
+    await writeLine(errorsStream, JSON.stringify({
       line: failure.record.lineNumber,
-      error: failure.error,
-      raw: failure.record.raw
+      error: failure.error
     }));
   }
 
@@ -175,37 +180,31 @@ let lineNumber = 0;
 let indexedCount = 0;
 let rejectedCount = 0;
 let failedCount = 0;
-let lastCheckpoint = lastCompletedLine;
 
 for await (const raw of lines) {
   lineNumber += 1;
   if (lineNumber <= lastCompletedLine) continue;
-  if (!raw.trim()) {
-    lastCheckpoint = lineNumber;
-    continue;
-  }
+  if (!raw.trim()) continue;
 
   try {
     if (raw.length > 64_000) throw new Error("JSONL line exceeds 64,000 characters.");
     const value = JSON.parse(raw);
-    const document = validateRecord(value, lineNumber);
+    const document = validateRecord(value);
     batch.push({ document, lineNumber, raw });
   } catch (error) {
     rejectedCount += 1;
-    await writeLine(rejectedStream, JSON.stringify({
+    await writeLine(rejectedStream, raw);
+    await writeLine(errorsStream, JSON.stringify({
       line: lineNumber,
-      error: error instanceof Error ? error.message : "Invalid record",
-      raw
+      error: error instanceof Error ? error.message : "Invalid record"
     }));
-    lastCheckpoint = lineNumber;
   }
 
   if (batch.length >= batchSize) {
     const stats = await sendBulk(batch);
     indexedCount += stats.indexed;
     failedCount += stats.failed;
-    lastCheckpoint = lineNumber;
-    await writeCheckpoint(lastCheckpoint);
+    await writeCheckpoint(lineNumber);
     batch = [];
     console.log("Processed line " + lineNumber + "; indexed this run: " + indexedCount + "; failed: " + failedCount + "; rejected: " + rejectedCount);
   }
@@ -216,16 +215,22 @@ if (batch.length) {
   indexedCount += stats.indexed;
   failedCount += stats.failed;
 }
-lastCheckpoint = lineNumber;
-await writeCheckpoint(lastCheckpoint);
+await writeCheckpoint(lineNumber);
 
+const finished = Promise.all([
+  once(rejectedStream, "finish"),
+  once(failuresStream, "finish"),
+  once(errorsStream, "finish")
+]);
 rejectedStream.end();
 failuresStream.end();
-await Promise.all([once(rejectedStream, "finish"), once(failuresStream, "finish")]);
+errorsStream.end();
+await finished;
 
 console.log("Import complete.");
 console.log("Indexed: " + indexedCount);
-console.log("Permanent indexing failures: " + failedCount + " (see " + failuresPath + ")");
-console.log("Rejected input rows: " + rejectedCount + " (see " + rejectedPath + ")");
-console.log("Checkpoint line: " + lastCheckpoint);
+console.log("Permanent indexing failures: " + failedCount + " (valid rows in " + failuresPath + ")");
+console.log("Rejected input rows: " + rejectedCount + " (raw rows in " + rejectedPath + ")");
+console.log("Error details: " + errorsPath);
+console.log("Checkpoint line: " + lineNumber);
 if (failedCount > 0 || rejectedCount > 0) process.exitCode = 1;
