@@ -1,10 +1,8 @@
-export type SearchConfig = {
-  endpoint: string;
-  index: string;
-  authorization: string;
-};
-
-export function getSearchConfig(): SearchConfig {
+/**
+ * Shared client for the OpenSearch provisioning and import scripts.
+ * Credentials are read only from the process environment.
+ */
+export function getSearchConfig() {
   const endpointValue = process.env.CHATTY_SEARCH_URL?.trim();
   const apiKey = process.env.CHATTY_SEARCH_API_KEY?.trim();
   const username = process.env.CHATTY_SEARCH_USERNAME?.trim();
@@ -16,7 +14,7 @@ export function getSearchConfig(): SearchConfig {
     throw new Error("Set CHATTY_SEARCH_API_KEY or both CHATTY_SEARCH_USERNAME and CHATTY_SEARCH_PASSWORD.");
   }
 
-  let endpoint: URL;
+  let endpoint;
   try {
     endpoint = new URL(endpointValue);
   } catch {
@@ -42,7 +40,7 @@ export function getSearchConfig(): SearchConfig {
   };
 }
 
-export async function searchRequest(path: string, init: RequestInit = {}): Promise<Response> {
+export async function searchRequest(path, init = {}) {
   const config = getSearchConfig();
   return fetch(config.endpoint + path, {
     ...init,
