@@ -67,7 +67,7 @@ The check confirms that the REST API and `search_knowledge` RPC are reachable.
 
 ### Import additional records
 
-For a trusted bulk import, also set `SUPABASE_SERVICE_ROLE_KEY` in your local `.env.local`. Never add this secret to browser code, GitHub source files or a `NEXT_PUBLIC_*` variable.
+For a trusted bulk import, also set `SUPABASE_SECRET_KEY` (or the legacy `SUPABASE_SERVICE_ROLE_KEY`) in your local `.env.local`. Never add this secret to browser code, GitHub source files or a `NEXT_PUBLIC_*` variable. Run `npm run db:seed` to restore the checked-in starter corpus.
 
 Prepare a UTF-8 JSON Lines file (`.jsonl`) with one record per line. The schema is in `data/knowledge-import.schema.json`. Each record needs a stable ID, title, domain, keywords, explanation and HTTPS source.
 
