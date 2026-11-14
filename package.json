@@ -8,7 +8,10 @@
     "build": "npm run check:corpus && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "check:corpus": "node scripts/check-corpus.mjs"
+    "check:corpus": "node scripts/check-corpus.mjs",
+    "search:provision": "node scripts/provision-search-index.mjs",
+    "search:import": "node scripts/import-knowledge.mjs",
+    "search:benchmark": "node scripts/benchmark-search.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
