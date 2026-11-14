@@ -1,51 +1,53 @@
 /**
- * Shared client for the OpenSearch provisioning and import scripts.
- * Credentials are read only from the process environment.
+ * Shared Supabase REST client for Chatty's importer and benchmark scripts.
+ * Read-only operations use the publishable key. Writes require the server-only
+ * service-role key and must never be exposed to browser code.
  */
-export function getSearchConfig() {
-  const endpointValue = process.env.CHATTY_SEARCH_URL?.trim();
-  const apiKey = process.env.CHATTY_SEARCH_API_KEY?.trim();
-  const username = process.env.CHATTY_SEARCH_USERNAME?.trim();
-  const password = process.env.CHATTY_SEARCH_PASSWORD?.trim();
-  const index = process.env.CHATTY_SEARCH_INDEX?.trim() || "chatty-knowledge-v1";
+export function getSupabaseConfig({ write = false } = {}) {
+  const endpointValue = process.env.SUPABASE_URL?.trim();
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY?.trim();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
-  if (!endpointValue) throw new Error("CHATTY_SEARCH_URL is required.");
-  if (!apiKey && !(username && password)) {
-    throw new Error("Set CHATTY_SEARCH_API_KEY or both CHATTY_SEARCH_USERNAME and CHATTY_SEARCH_PASSWORD.");
-  }
+  if (!endpointValue) throw new Error("SUPABASE_URL is required.");
 
   let endpoint;
   try {
     endpoint = new URL(endpointValue);
   } catch {
-    throw new Error("CHATTY_SEARCH_URL must be a valid URL.");
+    throw new Error("SUPABASE_URL must be a valid URL.");
   }
 
-  if (endpoint.protocol !== "https:" && endpoint.hostname !== "localhost") {
-    throw new Error("CHATTY_SEARCH_URL must use HTTPS outside localhost.");
+  const isLocal = endpoint.hostname === "localhost" || endpoint.hostname === "127.0.0.1";
+  if (endpoint.protocol !== "https:" && !isLocal) {
+    throw new Error("SUPABASE_URL must use HTTPS outside localhost.");
   }
-  if (!/^[a-z0-9][a-z0-9_-]{0,127}$/.test(index)) {
-    throw new Error("CHATTY_SEARCH_INDEX contains unsupported characters.");
+  if (!isLocal && !endpoint.hostname.endsWith(".supabase.co")) {
+    throw new Error("SUPABASE_URL must point to a Supabase project.");
   }
 
-  endpoint.pathname = endpoint.pathname.replace(/\/+$/, "");
-  const authorization = apiKey
-    ? "ApiKey " + apiKey
-    : "Basic " + Buffer.from(username + ":" + password).toString("base64");
+  const apiKey = write ? serviceRoleKey : (publishableKey || serviceRoleKey);
+  if (!apiKey) {
+    throw new Error(write
+      ? "SUPABASE_SERVICE_ROLE_KEY is required for trusted imports."
+      : "SUPABASE_PUBLISHABLE_KEY is required for read-only search.");
+  }
 
   return {
-    endpoint: endpoint.toString().replace(/\/$/, ""),
-    index,
-    authorization
+    endpoint: endpoint.toString().replace(/\/+$/, ""),
+    apiKey
   };
 }
 
-export async function searchRequest(path, init = {}) {
-  const config = getSearchConfig();
+export async function supabaseRequest(path, init = {}, { write = false } = {}) {
+  const config = getSupabaseConfig({ write });
+  if (typeof path !== "string" || !path.startsWith("/")) {
+    throw new Error("Supabase REST path must start with '/'.");
+  }
+
   return fetch(config.endpoint + path, {
     ...init,
     headers: {
-      "Authorization": config.authorization,
+      "apikey": config.apiKey,
       "Accept": "application/json",
       ...(init.body ? { "Content-Type": "application/json" } : {}),
       ...init.headers
