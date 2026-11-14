@@ -63,7 +63,16 @@ function toKnowledgeEntry(value: unknown): KnowledgeEntry | null {
     || !Array.isArray(keywords) || !keywords.every((item) => typeof item === "string")
   ) return null;
 
-  const safeSource = typeof source === "string" && source.startsWith("https://") ? source : undefined;
+  let safeSource: string | undefined;
+  if (typeof source === "string") {
+    try {
+      const parsed = new URL(source);
+      if (parsed.protocol === "https:") safeSource = parsed.toString();
+    } catch {
+      safeSource = undefined;
+    }
+  }
+
   return {
     id,
     title,
@@ -80,8 +89,8 @@ function toKnowledgeEntry(value: unknown): KnowledgeEntry | null {
 }
 
 /**
- * Searches the externally hosted OpenSearch index. The application never downloads
- * the full corpus: only a few matching records are returned for each question.
+ * Searches the separately hosted OpenSearch index. The app downloads only a few
+ * matching records per question; it never loads the full dataset into a Vercel function.
  */
 export async function searchDistributedKnowledge(query: string): Promise<KnowledgeEntry | null> {
   const config = getSearchConfig();
@@ -99,11 +108,21 @@ export async function searchDistributedKnowledge(query: string): Promise<Knowled
           {
             multi_match: {
               query: cleanQuery,
-              fields: ["title^10", "aliases^7", "keywords^4", "content^1.5"],
-              type: "best_fields",
+              fields: ["title^10", "aliases^7", "keywords^4"],
+              type: "cross_fields",
               operator: "or",
-              minimum_should_match: "60%",
-              fuzziness: "AUTO"
+              minimum_should_match: "60%"
+            }
+          },
+          {
+            match: {
+              content: {
+                query: cleanQuery,
+                operator: "or",
+                minimum_should_match: "60%",
+                fuzziness: "AUTO",
+                boost: 1.2
+              }
             }
           },
           {
@@ -139,10 +158,10 @@ export async function searchDistributedKnowledge(query: string): Promise<Knowled
     if (!hits.length) return null;
 
     const first = hits[0];
+    const second = hits[1];
     const firstScore = typeof first._score === "number" ? first._score : 0;
-    const secondScore = typeof hits[1]?._score === "number" ? hits[1]._score as number : 0;
+    const secondScore = second && typeof second._score === "number" ? second._score : 0;
     const entry = toKnowledgeEntry(first._source);
-
     if (!entry || firstScore <= 0) return null;
 
     const normalisedQuery = cleanQuery.toLowerCase();
@@ -153,10 +172,9 @@ export async function searchDistributedKnowledge(query: string): Promise<Knowled
     if (!exactTitleOrAlias && secondScore > 0 && firstScore - secondScore < firstScore * 0.04) {
       return null;
     }
-
     return entry;
   } catch {
-    // The local knowledge base remains available if the remote cluster is offline.
+    // The built-in knowledge base remains available if the remote cluster is offline.
     return null;
   }
 }
