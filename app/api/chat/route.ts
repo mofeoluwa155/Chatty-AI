@@ -1,4 +1,5 @@
 import { think, type CoreMessage, type CoreMode } from "@/lib/core/engine";
+import { CORE_CORPUS_STATS } from "@/lib/core/training";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;
@@ -61,6 +62,22 @@ function validateMessages(value: unknown): CoreMessage[] | null {
 
   if (result[result.length - 1]?.role !== "user") return null;
   return result;
+}
+
+export async function GET(): Promise<Response> {
+  return Response.json({
+    status: "ready",
+    engine: "Chatty Core",
+    version: "0.1.0",
+    corpus: CORE_CORPUS_STATS,
+    capabilities: ["arithmetic", "square-roots", "powers", "linear-equations", "local-knowledge", "conversation-intents"],
+  }, {
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      "X-Chatty-Engine": "Chatty-Core/0.1.0",
+    },
+  });
 }
 
 export async function POST(request: Request): Promise<Response> {
