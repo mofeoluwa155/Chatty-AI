@@ -1,4 +1,4 @@
-import corpus from "@/data/core-corpus.json";
+import { CORE_CORPUS } from "./training";
 
 export type KnowledgeEntry = {
   id: string;
@@ -10,7 +10,7 @@ export type KnowledgeEntry = {
   reviewStatus?: string;
 };
 
-const KNOWLEDGE: KnowledgeEntry[] = corpus.knowledge as KnowledgeEntry[];
+const KNOWLEDGE: KnowledgeEntry[] = CORE_CORPUS.knowledge;
 
 function words(value: string): string[] {
   return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((word) => word.length > 1);
