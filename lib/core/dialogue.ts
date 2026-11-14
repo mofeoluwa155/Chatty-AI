@@ -20,15 +20,13 @@ const FILLER_WORDS = new Set([
 ]);
 
 function normalise(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9\\s]/g, " ").replace(/\\s+/g, " ").trim();
+  return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function meaningfulWords(value: string): Set<string> {
-  return new Set(
-    normalise(value)
-      .split(" ")
-      .filter((word) => word.length > 1 && !FILLER_WORDS.has(word))
-  );
+  return new Set(normalise(value).split(" ").filter(
+    (word) => word.length > 1 && !FILLER_WORDS.has(word)
+  ));
 }
 
 function similarity(left: Set<string>, right: Set<string>): number {
@@ -66,7 +64,6 @@ export function matchDialogue(text: string, previousUserMessage?: string): Dialo
     for (const example of item.examples) {
       const exampleWords = meaningfulWords(example);
       if (exampleWords.size < 2) continue;
-
       const score = similarity(queryWords, exampleWords);
       if (score > (best?.score ?? 0)) {
         best = { item, score };
@@ -77,9 +74,7 @@ export function matchDialogue(text: string, previousUserMessage?: string): Dialo
     }
   }
 
-  // A high threshold avoids turning a loosely related sentence into a guessed intent.
   if (!best || best.score < 0.84 || ambiguous) return null;
-
   let answer = best.item.response;
   if (best.item.intent === "confusion" && previousUserMessage) {
     answer += " You were asking about: " + previousUserMessage + ".";
