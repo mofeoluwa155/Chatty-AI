@@ -1,29 +1,26 @@
 {
-  "name": "chatty-ai",
-  "version": "1.0.0",
-  "description": "Chatty AI - Modern Intelligent Assistant created by Akintayo Mofeoluwa Richard",
-  "main": "server.js",
+  "name": "chatty-ai-unified-brain",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A conversational, multi-model AI assistant powered by OpenAI and Gemini through Vercel AI Gateway.",
   "scripts": {
-    "start": "node server.js",
-    "test": "node test/runner.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
-  "keywords": [
-    "chatty-ai",
-    "assistant",
-    "groq",
-    "firebase"
-  ],
-  "author": "Akintayo Mofeoluwa Richard",
-  "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.3",
-    "express": "^5.2.1",
-    "firebase-admin": "^13.1.0",
-    "groq-sdk": "^1.6.0",
-    "mammoth": "^1.13.0",
-    "multer": "^2.4.0",
-    "nodemailer": "^10.0.12",
-    "pdf-parse": "^2.4.5"
+    "ai": "7.0.172",
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-markdown": "10.1.0",
+    "remark-gfm": "4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.9.3"
   }
 }
