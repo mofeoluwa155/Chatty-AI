@@ -1,0 +1,16 @@
+{
+  "name": "mathai-tutor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MathAI — an AI mathematics tutor with symbolic and numeric verification",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "mathjs": "^14.8.1",
+    "nerdamer": "^1.1.13"
+  }
+}
