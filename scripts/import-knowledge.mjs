@@ -1,9 +1,9 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import { readFile, rename, writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { once } from "node:events";
-import { searchRequest } from "./search-client.mjs";
+import { supabaseRequest } from "./search-client.mjs";
 
 const inputArgument = process.argv[2];
 if (!inputArgument) {
@@ -12,9 +12,9 @@ if (!inputArgument) {
 }
 
 const inputPath = resolve(inputArgument);
-const batchSize = Number.parseInt(process.env.CHATTY_IMPORT_BATCH_SIZE || "500", 10);
+const batchSize = Number.parseInt(process.env.SUPABASE_IMPORT_BATCH_SIZE || "500", 10);
 if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 2_000) {
-  throw new Error("CHATTY_IMPORT_BATCH_SIZE must be an integer from 1 to 2000.");
+  throw new Error("SUPABASE_IMPORT_BATCH_SIZE must be an integer from 1 to 2000.");
 }
 
 const checkpointPath = inputPath + ".chatty-checkpoint.json";
@@ -29,7 +29,7 @@ try {
     lastCompletedLine = saved.lastCompletedLine;
   }
 } catch {
-  // A missing checkpoint means this is the first import run.
+  // No checkpoint means this is the first run.
 }
 
 const appendMode = lastCompletedLine > 0 ? "a" : "w";
@@ -37,54 +37,61 @@ const rejectedStream = createWriteStream(rejectedPath, { flags: appendMode });
 const failuresStream = createWriteStream(failuresPath, { flags: appendMode });
 const errorsStream = createWriteStream(errorsPath, { flags: appendMode });
 
+function requireText(value, name, maxLength = 20_000) {
+  if (typeof value !== "string" || !value.trim() || value.length > maxLength) {
+    throw new Error(name + " must be non-empty text of at most " + maxLength + " characters.");
+  }
+  return value.trim();
+}
+
+function optionalText(value, name, maxLength = 2_000) {
+  if (value === undefined || value === null || value === "") return null;
+  return requireText(value, name, maxLength);
+}
+
+function textArray(value, name, allowEmpty = false) {
+  if (allowEmpty && value === undefined) return [];
+  if (!Array.isArray(value) || (!allowEmpty && value.length === 0) || value.length > 100) {
+    throw new Error(name + " must be an array containing no more than 100 entries.");
+  }
+  return [...new Set(value.map((item, index) => requireText(item, name + "[" + index + "]", 500)))];
+}
+
 function validateRecord(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Each JSONL line must be an object.");
   }
 
-  const text = (field, name, max = 20_000) => {
-    if (typeof field !== "string" || !field.trim() || field.length > max) {
-      throw new Error(name + " must be non-empty text of at most " + max + " characters.");
-    }
-    return field.trim();
-  };
-  const list = (field, name, allowEmpty = false) => {
-    if (allowEmpty && field === undefined) return [];
-    if (!Array.isArray(field) || (!allowEmpty && field.length === 0) || field.length > 100) {
-      throw new Error(name + " must be an array containing no more than 100 entries.");
-    }
-    return [...new Set(field.map((item, index) => text(item, name + "[" + index + "]", 500)))];
-  };
-
-  const id = text(value.id, "id", 512);
-  if (Buffer.byteLength(id, "utf8") > 512) throw new Error("id exceeds the search engine's 512-byte limit.");
-  const title = text(value.title, "title", 500);
-  const domain = text(value.domain, "domain", 120);
-  const explanation = text(value.explanation, "explanation", 20_000);
-  const source = text(value.source, "source", 2_000);
+  const id = requireText(value.id, "id", 512);
+  if (Buffer.byteLength(id, "utf8") > 512) throw new Error("id exceeds the 512-byte limit.");
+  const title = requireText(value.title, "title", 500);
+  const domain = requireText(value.domain, "domain", 120);
+  const explanation = requireText(value.explanation, "explanation", 20_000);
+  const source = requireText(value.source, "source", 2_000);
   const sourceUrl = new URL(source);
   if (sourceUrl.protocol !== "https:") throw new Error("source must be an HTTPS reference.");
 
-  const aliases = list(value.aliases ?? [], "aliases", true);
-  const keywords = list(value.keywords, "keywords");
-  const tags = list(value.tags ?? [], "tags", true);
-  const example = value.example === undefined ? undefined : text(value.example, "example", 5_000);
-  const language = value.language === undefined ? "en" : text(value.language, "language", 16);
+  const keywords = textArray(value.keywords, "keywords");
+  const aliases = textArray(value.aliases ?? [], "aliases", true);
+  const tags = textArray(value.tags ?? [], "tags", true);
+  const example = value.example === undefined ? null : requireText(value.example, "example", 5_000);
+  const language = value.language === undefined ? "en" : requireText(value.language, "language", 16);
 
   return {
     id,
     title,
+    domain,
     aliases,
     keywords,
     explanation,
-    ...(example ? { example } : {}),
-    source: sourceUrl.toString(),
-    domain,
+    example,
+    source_url: sourceUrl.toString(),
+    licence: optionalText(value.licence ?? value.license, "licence", 500),
+    attribution: optionalText(value.attribution, "attribution", 2_000),
     tags,
     language,
-    // Imports are unreviewed until a human review process explicitly approves them.
-    reviewStatus: "starter",
-    content: [title, ...aliases, ...keywords, explanation, example ?? ""].join(" ")
+    // New imports are starter records and require human review before approval.
+    review_status: "starter"
   };
 }
 
@@ -98,139 +105,185 @@ async function wait(milliseconds) {
   await new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
 
-function writeLine(stream, line) {
-  if (!stream.write(line + "\n")) return once(stream, "drain");
-  return Promise.resolve();
+async function writeLine(stream, line) {
+  if (!stream.write(line + "\n")) await once(stream, "drain");
 }
 
-async function sendBulk(batch) {
+async function createIngestionJob() {
+  const response = await supabaseRequest("/rest/v1/ingestion_jobs?select=id", {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify([{
+      dataset_name: basename(inputPath),
+      dataset_version: process.env.SUPABASE_IMPORT_DATASET_VERSION || null,
+      status: "running",
+      started_at: new Date().toISOString()
+    }])
+  }, { write: true });
+
+  if (!response.ok) {
+    throw new Error(
+      "Could not create ingestion job: HTTP " +
+      response.status + " " + (await response.text()).slice(0, 1000)
+    );
+  }
+  const rows = await response.json();
+  if (!Array.isArray(rows) || typeof rows[0]?.id !== "string") {
+    throw new Error("Supabase did not return an ingestion job ID.");
+  }
+  return rows[0].id;
+}
+
+async function updateIngestionJob(jobId, values) {
+  const response = await supabaseRequest(
+    "/rest/v1/ingestion_jobs?id=eq." + encodeURIComponent(jobId),
+    {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify(values)
+    },
+    { write: true }
+  );
+  if (!response.ok) {
+    throw new Error(
+      "Could not update ingestion job: HTTP " +
+      response.status + " " + (await response.text()).slice(0, 1000)
+    );
+  }
+}
+
+async function sendBatch(batch) {
   let pending = batch;
-  let indexed = 0;
-  const permanentFailures = [];
-
   for (let attempt = 0; pending.length && attempt < 6; attempt += 1) {
-    const targetIndex = process.env.CHATTY_SEARCH_INDEX || "chatty-knowledge-v1";
-    const payload = pending.map((record) =>
-      JSON.stringify({ index: { _index: targetIndex, _id: record.document.id } })
-      + "\n" + JSON.stringify(record.document) + "\n"
-    ).join("");
-
-    let result;
     try {
-      const response = await searchRequest("/_bulk", {
+      const response = await supabaseRequest("/rest/v1/knowledge_records?on_conflict=id", {
         method: "POST",
-        headers: { "Content-Type": "application/x-ndjson" },
-        body: payload
-      });
-      if (!response.ok) {
-        throw new Error("HTTP " + response.status + ": " + (await response.text()).slice(0, 1000));
+        headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify(pending.map((item) => item.document))
+      }, { write: true });
+
+      if (response.ok) {
+        return { inserted: pending.length, failures: [] };
       }
-      result = await response.json();
+
+      const detail = "HTTP " + response.status + ": " + (await response.text()).slice(0, 1000);
+      if (![429, 502, 503, 504].includes(response.status) || attempt === 5) {
+        return { inserted: 0, failures: pending.map((item) => ({ item, error: detail })) };
+      }
     } catch (error) {
       if (attempt === 5) {
-        permanentFailures.push(...pending.map((record) => ({
-          record,
-          error: error instanceof Error ? error.message : "Unknown bulk request error"
-        })));
-        pending = [];
-        break;
-      }
-      await wait(Math.min(30_000, 1_000 * (2 ** attempt)));
-      continue;
-    }
-
-    const items = Array.isArray(result.items) ? result.items : [];
-    const retry = [];
-    for (let index = 0; index < pending.length; index += 1) {
-      const item = items[index];
-      const operation = item && typeof item === "object" ? item.index : undefined;
-      const status = operation && typeof operation.status === "number" ? operation.status : 500;
-
-      if (status >= 200 && status < 300) {
-        indexed += 1;
-      } else if ([429, 502, 503, 504].includes(status) && attempt < 5) {
-        retry.push(pending[index]);
-      } else {
-        permanentFailures.push({
-          record: pending[index],
-          error: "HTTP " + status + ": " + JSON.stringify(operation?.error ?? result.error ?? "Indexing failed").slice(0, 1000)
-        });
+        const detail = error instanceof Error ? error.message : "Unknown request error";
+        return { inserted: 0, failures: pending.map((item) => ({ item, error: detail })) };
       }
     }
-    pending = retry;
-    if (pending.length) await wait(Math.min(30_000, 1_000 * (2 ** attempt)));
+    await wait(Math.min(30_000, 1_000 * (2 ** attempt)));
   }
-
-  for (const failure of permanentFailures) {
-    // Keep failed records as valid JSONL so they can be re-imported after correction.
-    await writeLine(failuresStream, failure.record.raw);
-    await writeLine(errorsStream, JSON.stringify({
-      line: failure.record.lineNumber,
-      error: failure.error
-    }));
-  }
-
-  return { indexed, failed: permanentFailures.length };
+  return { inserted: 0, failures: [] };
 }
 
+const jobId = await createIngestionJob();
 const input = createReadStream(inputPath, { encoding: "utf8" });
 const lines = createInterface({ input, crlfDelay: Infinity });
 let batch = [];
 let lineNumber = 0;
-let indexedCount = 0;
+let insertedCount = 0;
 let rejectedCount = 0;
 let failedCount = 0;
 
-for await (const raw of lines) {
-  lineNumber += 1;
-  if (lineNumber <= lastCompletedLine) continue;
-  if (!raw.trim()) continue;
+try {
+  for await (const raw of lines) {
+    lineNumber += 1;
+    if (lineNumber <= lastCompletedLine) continue;
+    if (!raw.trim()) continue;
 
-  try {
-    if (raw.length > 64_000) throw new Error("JSONL line exceeds 64,000 characters.");
-    const value = JSON.parse(raw);
-    const document = validateRecord(value);
-    batch.push({ document, lineNumber, raw });
-  } catch (error) {
-    rejectedCount += 1;
-    await writeLine(rejectedStream, raw);
-    await writeLine(errorsStream, JSON.stringify({
-      line: lineNumber,
-      error: error instanceof Error ? error.message : "Invalid record"
-    }));
+    try {
+      if (raw.length > 64_000) throw new Error("JSONL line exceeds 64,000 characters.");
+      const document = validateRecord(JSON.parse(raw));
+      batch.push({ document, lineNumber, raw });
+    } catch (error) {
+      rejectedCount += 1;
+      await writeLine(rejectedStream, raw);
+      await writeLine(errorsStream, JSON.stringify({
+        line: lineNumber,
+        error: error instanceof Error ? error.message : "Invalid record"
+      }));
+    }
+
+    if (batch.length >= batchSize) {
+      const stats = await sendBatch(batch);
+      insertedCount += stats.inserted;
+      failedCount += stats.failures.length;
+      for (const failure of stats.failures) {
+        await writeLine(failuresStream, failure.item.raw);
+        await writeLine(errorsStream, JSON.stringify({
+          line: failure.item.lineNumber,
+          error: failure.error
+        }));
+      }
+      await writeCheckpoint(lineNumber);
+      await updateIngestionJob(jobId, {
+        records_seen: lineNumber,
+        records_inserted: insertedCount,
+        records_rejected: rejectedCount + failedCount
+      });
+      batch = [];
+      console.log(
+        "Processed line " + lineNumber +
+        "; upserted this run: " + insertedCount +
+        "; failed: " + failedCount +
+        "; rejected: " + rejectedCount
+      );
+    }
   }
 
-  if (batch.length >= batchSize) {
-    const stats = await sendBulk(batch);
-    indexedCount += stats.indexed;
-    failedCount += stats.failed;
-    await writeCheckpoint(lineNumber);
-    batch = [];
-    console.log("Processed line " + lineNumber + "; indexed this run: " + indexedCount + "; failed: " + failedCount + "; rejected: " + rejectedCount);
+  if (batch.length) {
+    const stats = await sendBatch(batch);
+    insertedCount += stats.inserted;
+    failedCount += stats.failures.length;
+    for (const failure of stats.failures) {
+      await writeLine(failuresStream, failure.item.raw);
+      await writeLine(errorsStream, JSON.stringify({
+        line: failure.item.lineNumber,
+        error: failure.error
+      }));
+    }
   }
+
+  await writeCheckpoint(lineNumber);
+  await updateIngestionJob(jobId, {
+    status: failedCount > 0 || rejectedCount > 0 ? "failed" : "completed",
+    records_seen: lineNumber,
+    records_inserted: insertedCount,
+    records_rejected: rejectedCount + failedCount,
+    completed_at: new Date().toISOString()
+  });
+} catch (error) {
+  await updateIngestionJob(jobId, {
+    status: "failed",
+    records_seen: lineNumber,
+    records_inserted: insertedCount,
+    records_rejected: rejectedCount + failedCount,
+    error_message: (error instanceof Error ? error.message : "Unknown import error").slice(0, 4000),
+    completed_at: new Date().toISOString()
+  });
+  throw error;
+} finally {
+  const finished = Promise.all([
+    once(rejectedStream, "finish"),
+    once(failuresStream, "finish"),
+    once(errorsStream, "finish")
+  ]);
+  rejectedStream.end();
+  failuresStream.end();
+  errorsStream.end();
+  await finished;
 }
 
-if (batch.length) {
-  const stats = await sendBulk(batch);
-  indexedCount += stats.indexed;
-  failedCount += stats.failed;
-}
-await writeCheckpoint(lineNumber);
-
-const finished = Promise.all([
-  once(rejectedStream, "finish"),
-  once(failuresStream, "finish"),
-  once(errorsStream, "finish")
-]);
-rejectedStream.end();
-failuresStream.end();
-errorsStream.end();
-await finished;
-
-console.log("Import complete.");
-console.log("Indexed: " + indexedCount);
-console.log("Permanent indexing failures: " + failedCount + " (valid rows in " + failuresPath + ")");
-console.log("Rejected input rows: " + rejectedCount + " (raw rows in " + rejectedPath + ")");
+console.log("Supabase knowledge import complete.");
+console.log("Ingestion job: " + jobId);
+console.log("Upserted: " + insertedCount);
+console.log("Permanent failures: " + failedCount + " (valid JSONL in " + failuresPath + ")");
+console.log("Rejected input rows: " + rejectedCount + " (raw JSONL in " + rejectedPath + ")");
 console.log("Error details: " + errorsPath);
 console.log("Checkpoint line: " + lineNumber);
 if (failedCount > 0 || rejectedCount > 0) process.exitCode = 1;
