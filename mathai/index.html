@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="MathAI is an AI maths tutor that explains problems clearly, step by step, from fractions to calculus.">
+  <title>MathAI — Maths, made understandable</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="MathAI home">
+        <span class="brand-mark">∑</span>
+        <span>Math<span class="brand-accent">AI</span></span>
+      </a>
+      <div class="topbar-right">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label" id="statusLabel">Checking tutor…</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="intro">
+        <div class="eyebrow"><span class="eyebrow-line"></span> YOUR PERSONAL MATHS TUTOR</div>
+        <h1>Maths, made<br><span>understandable.</span></h1>
+        <p>Bring any maths problem. Get a clear method, useful explanations and answers checked with mathematical tools.</p>
+        <div class="topic-list" aria-label="Example topics">
+          <button class="topic-chip" data-prompt="Explain how to add and simplify fractions, with an example.">Fractions</button>
+          <button class="topic-chip" data-prompt="Solve 3x + 5 = 20 and explain every step.">Algebra</button>
+          <button class="topic-chip" data-prompt="Find the area of a triangle with base 12 cm and height 7 cm.">Geometry</button>
+          <button class="topic-chip" data-prompt="Explain how to use sine, cosine and tangent in a right-angled triangle.">Trigonometry</button>
+          <button class="topic-chip" data-prompt="Find the mean, median and mode of 4, 7, 7, 9, 13.">Statistics</button>
+          <button class="topic-chip" data-prompt="Differentiate y = 3x^2 + 4x - 7 and explain the power rule.">Calculus</button>
+        </div>
+      </section>
+
+      <section class="tutor-card" aria-label="MathAI tutor">
+        <div class="card-heading">
+          <div class="tutor-avatar">∑</div>
+          <div>
+            <h2>MathAI Tutor</h2>
+            <p>Ask a question. Learn the method.</p>
+          </div>
+          <span class="secure-label"><span>●</span> Private API</span>
+        </div>
+
+        <div class="chat-window" id="chatWindow" aria-live="polite">
+          <article class="message assistant-message welcome-message">
+            <div class="message-avatar">∑</div>
+            <div class="message-content">
+              <div class="message-meta">MATHAI <span>•</span> READY TO HELP</div>
+              <div class="message-bubble">
+                <p>Hi! I can help with everything from basic number work to advanced maths.</p>
+                <p>Send me a question, or choose a topic above to get started.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="settings-row">
+          <label class="field-group">
+            <span>YOUR LEVEL</span>
+            <select id="levelSelect">
+              <option>Adaptive level</option>
+              <option>Primary school</option>
+              <option>Lower secondary</option>
+              <option selected>National 5 / GCSE</option>
+              <option>A-level / Higher</option>
+              <option>University</option>
+            </select>
+          </label>
+          <label class="field-group">
+            <span>TEACHING STYLE</span>
+            <select id="modeSelect">
+              <option value="step_by_step" selected>Teach me step by step</option>
+              <option value="hint">Give me a hint</option>
+              <option value="check">Check my working</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="working-field" id="workingField" hidden>
+          <span>YOUR WORKING (OPTIONAL)</span>
+          <textarea id="workingInput" rows="2" placeholder="Paste or type the steps you have tried…"></textarea>
+        </label>
+
+        <form class="composer" id="questionForm">
+          <textarea id="questionInput" rows="2" maxlength="6000" placeholder="Type your maths question here…" required></textarea>
+          <div class="composer-footer">
+            <span>Clear explanations • Checked calculations</span>
+            <button class="send-button" id="sendButton" type="submit"><span>Ask MathAI</span><span aria-hidden="true">↗</span></button>
+          </div>
+        </form>
+        <div class="card-bottom">
+          <span>MathAI can make mistakes. Check important answers and show your working in exams.</span>
+          <button id="clearButton" class="text-button" type="button">Clear chat</button>
+        </div>
+      </section>
+
+      <section class="feature-strip">
+        <div><span class="feature-icon">01</span><strong>Understand</strong><p>Learn why each step works.</p></div>
+        <div><span class="feature-icon">02</span><strong>Verify</strong><p>Use calculation and algebra tools.</p></div>
+        <div><span class="feature-icon">03</span><strong>Improve</strong><p>Spot mistakes and practise.</p></div>
+      </section>
+    </main>
+    <footer>MathAI <span>·</span> A learning companion, not a replacement for your teacher.</footer>
+  </div>
+</body>
+</html>
