@@ -245,3 +245,12 @@ button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2p
   .suggestion-title { font-size: 9px; }
   .enter-hint { display: none; }
 }
+
+/* Live status for the independent Chatty Core engine. */
+.model-orb.online { background: var(--mint); box-shadow: 0 0 9px rgba(142,217,192,.75); }
+.model-orb.offline { background: #f08a8a; box-shadow: 0 0 9px rgba(240,138,138,.55); }
+.model-orb.checking { background: #d7bd80; box-shadow: 0 0 9px rgba(215,189,128,.55); }
+.engine-state { padding-left: 8px; border-left: 1px solid var(--line-strong); color: #9392a8; font: 8px "DM Mono", monospace; letter-spacing: .8px; }
+.status-pulse.online { background: var(--mint); box-shadow: 0 0 9px rgba(142,217,192,.65); }
+.status-pulse.offline { background: #f08a8a; box-shadow: 0 0 9px rgba(240,138,138,.55); }
+.status-pulse.checking { background: #d7bd80; box-shadow: 0 0 9px rgba(215,189,128,.55); }
