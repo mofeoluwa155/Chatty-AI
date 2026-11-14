@@ -50,7 +50,7 @@ function tokenize(source: string): Token[] {
     } else if (match[4] === ")") {
       tokens.push({ kind: "right" });
     } else if (match[4]) {
-      tokens.push({ kind: "operator", value: match[4] as Token & never });
+      tokens.push({ kind: "operator", value: match[4] as "+" | "-" | "*" | "/" | "^" });
     }
   }
 
