@@ -1,0 +1,118 @@
+{
+  "targetAccuracy": 0.9,
+  "description": "Paraphrased seed-topic queries. This measures search retrieval against expected record IDs; it does not prove factual answer accuracy.",
+  "cases": [
+    {
+      "expectedId": "computing.binary",
+      "query": "How do computers represent information using zeroes and ones?"
+    },
+    {
+      "expectedId": "computing.bit-byte",
+      "query": "How many different patterns can be stored in one byte?"
+    },
+    {
+      "expectedId": "computing.cpu",
+      "query": "What does the central processing unit do?"
+    },
+    {
+      "expectedId": "computing.ram",
+      "query": "Which computer memory is volatile and temporary?"
+    },
+    {
+      "expectedId": "computing.rom",
+      "query": "What is firmware memory used for when a computer starts?"
+    },
+    {
+      "expectedId": "computing.cache",
+      "query": "What does CPU cache do?"
+    },
+    {
+      "expectedId": "computing.validation",
+      "query": "What does a validation range check do?"
+    },
+    {
+      "expectedId": "computing.verification",
+      "query": "How can you verify that entered data matches the original?"
+    },
+    {
+      "expectedId": "computing.testing",
+      "query": "What are normal, boundary and erroneous test data?"
+    },
+    {
+      "expectedId": "computing.primary-key",
+      "query": "Why does a database table need a primary key?"
+    },
+    {
+      "expectedId": "computing.lan-wan",
+      "query": "What is the difference between a LAN and a WAN?"
+    },
+    {
+      "expectedId": "computing.encryption",
+      "query": "How does encryption protect information?"
+    },
+    {
+      "expectedId": "computing.html-css",
+      "query": "Which language structures a web page and which one styles it?"
+    },
+    {
+      "expectedId": "chemistry.atomic-structure",
+      "query": "What particles are found in the nucleus of an atom?"
+    },
+    {
+      "expectedId": "chemistry.atomic-number",
+      "query": "What does the proton number tell us about an element?"
+    },
+    {
+      "expectedId": "chemistry.isotopes",
+      "query": "How can atoms of the same element have different mass numbers?"
+    },
+    {
+      "expectedId": "chemistry.covalent",
+      "query": "What happens to electrons in a covalent bond?"
+    },
+    {
+      "expectedId": "chemistry.ionic",
+      "query": "How are positive and negative ions formed in ionic bonding?"
+    },
+    {
+      "expectedId": "chemistry.neutralisation",
+      "query": "What products form when an acid reacts with an alkali?"
+    },
+    {
+      "expectedId": "chemistry.energy-changes",
+      "query": "What is the difference between exothermic and endothermic reactions?"
+    },
+    {
+      "expectedId": "chemistry.homologous-series",
+      "query": "What properties do members of a homologous series share?"
+    },
+    {
+      "expectedId": "biology.diffusion",
+      "query": "How do particles move down a concentration gradient?"
+    },
+    {
+      "expectedId": "biology.osmosis",
+      "query": "How does water pass through a selectively permeable membrane?"
+    },
+    {
+      "expectedId": "biology.enzymes",
+      "query": "What is an enzyme and what does its active site do?"
+    },
+    {
+      "expectedId": "biology.respiration",
+      "query": "What are the products of aerobic respiration?"
+    },
+    {
+      "expectedId": "biology.cell-membrane",
+      "query": "What controls what enters and leaves a cell?"
+    },
+    {
+      "expectedId": "maths.percentage",
+      "query": "What does a percent mean?"
+    },
+    {
+      "expectedId": "maths.fraction",
+      "query": "What are the top and bottom numbers of a fraction called?"
+    }
+  ]
+}
