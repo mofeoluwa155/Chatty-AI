@@ -5,9 +5,10 @@
   "description": "An independent, deterministic conversational and reasoning engine built in TypeScript.",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run check:corpus && next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:corpus": "node scripts/check-corpus.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
